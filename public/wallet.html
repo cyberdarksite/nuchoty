@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - HerokuDeployer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🚀</span>
+                <span class="brand-text">HerokuDeployer</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/deploy.html">Deploy</a>
+                <a href="/wallet.html" class="active">Wallet</a>
+                <a href="/login.html" class="btn-login">Login</a>
+            </div>
+        </nav>
+
+        <!-- Wallet Section -->
+        <section class="wallet-section">
+            <div class="wallet-container">
+                <h1>Your Wallet</h1>
+                <p class="subtitle">Manage your balance and transactions</p>
+
+                <!-- Balance Card -->
+                <div class="balance-card">
+                    <div class="balance-card-content">
+                        <span class="balance-label">💰 Available Balance</span>
+                        <span class="balance-amount-large" id="walletBalance">₦0.00</span>
+                        <div class="balance-stats">
+                            <div class="stat">
+                                <span>Total Deposits</span>
+                                <span id="totalDeposits">₦0.00</span>
+                            </div>
+                            <div class="stat">
+                                <span>Total Spent</span>
+                                <span id="totalSpent">₦0.00</span>
+                            </div>
+                            <div class="stat">
+                                <span>Deployments</span>
+                                <span id="deploymentCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="balance-actions">
+                        <button class="btn-primary" onclick="openDepositModal()">💰 Deposit Funds</button>
+                        <button class="btn-secondary" onclick="refreshWallet()">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Deposit Modal -->
+                <div id="depositModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeDepositModal()">&times;</span>
+                        <h2>Deposit Funds</h2>
+                        <p>Add money to your wallet using Paystack</p>
+                        <div class="form-group">
+                            <label for="depositAmount">Amount (NGN)</label>
+                            <input type="number" id="depositAmount" placeholder="Enter amount (min: ₦100)" min="100">
+                        </div>
+                        <div class="quick-amounts">
+                            <button class="quick-amount" onclick="setAmount(500)">₦500</button>
+                            <button class="quick-amount" onclick="setAmount(1000)">₦1,000</button>
+                            <button class="quick-amount" onclick="setAmount(2000)">₦2,000</button>
+                            <button class="quick-amount" onclick="setAmount(5000)">₦5,000</button>
+                        </div>
+                        <button class="btn-primary btn-block" onclick="initializeDeposit()">💳 Pay Now</button>
+                        <div id="depositMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <!-- Transactions -->
+                <div class="transactions-section">
+                    <h3>Transaction History</h3>
+                    <div id="transactionsList" class="transactions-list">
+                        <div class="loading">Loading transactions...</div>
+                    </div>
+                </div>
+
+                <!-- Deployments -->
+                <div class="deployments-section">
+                    <h3>Your Deployments</h3>
+                    <div id="deploymentsList" class="deployments-list">
+                        <div class="loading">Loading deployments...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+        </footer>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        
+        if (!currentUser.email) {
+            window.location.href = '/login.html';
+        }
+
+        // Update nav
+        document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
+        document.querySelector('.btn-login').href = '/wallet.html';
+
+        // Load wallet data
+        async function loadWalletData() {
+            try {
+                const response = await fetch(`/api/wallet/${currentUser.email}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('walletBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
+                    document.getElementById('totalDeposits').textContent = `₦${data.totalDeposits.toLocaleString()}`;
+                    document.getElementById('totalSpent').textContent = `₦${data.totalSpent.toLocaleString()}`;
+                    document.getElementById('deploymentCount').textContent = data.deploymentCount || 0;
+                }
+            } catch (error) {
+                console.error('Error loading wallet:', error);
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const response = await fetch(`/api/transactions/${currentUser.email}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('transactionsList');
+                
+                if (data.success && data.transactions.length > 0) {
+                    list.innerHTML = data.transactions.map(t => `
+                        <div class="transaction-item ${t.type}">
+                            <div class="transaction-icon">${t.type === 'deposit' ? '💰' : '🚀'}</div>
+                            <div class="transaction-details">
+                                <span class="transaction-type">${t.type === 'deposit' ? 'Deposit' : 'Deployment'}</span>
+                                <span class="transaction-desc">${t.description}</span>
+                                <span class="transaction-date">${new Date(t.date).toLocaleDateString()}</span>
+                            </div>
+                            <span class="transaction-amount ${t.type === 'deposit' ? 'positive' : 'negative'}">
+                                ${t.type === 'deposit' ? '+' : '-'}₦${t.amount.toLocaleString()}
+                            </span>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state">No transactions yet</div>';
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        // Load deployments
+        async function loadDeployments() {
+            try {
+                const response = await fetch(`/api/deployments/${currentUser.email}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('deploymentsList');
+                
+                if (data.success && data.deployments.length > 0) {
+                    list.innerHTML = data.deployments.map(d => `
+                        <div class="deployment-item">
+                            <div class="deployment-info">
+                                <span class="deployment-name">${d.appName}</span>
+                                <span class="deployment-status status-${d.deploymentStatus}">${d.deploymentStatus}</span>
+                            </div>
+                            <div class="deployment-details">
+                                <span>💰 ₦${d.amountPaid.toLocaleString()}</span>
+                                <span>📅 ${new Date(d.createdAt).toLocaleDateString()}</span>
+                                ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View</a>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state">No deployments yet</div>';
+                }
+            } catch (error) {
+                console.error('Error loading deployments:', error);
+            }
+        }
+
+        // Deposit functions
+        function openDepositModal() {
+            document.getElementById('depositModal').style.display = 'block';
+        }
+
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        function setAmount(amount) {
+            document.getElementById('depositAmount').value = amount;
+        }
+
+        async function initializeDeposit() {
+            const amount = parseInt(document.getElementById('depositAmount').value);
+            const messageDiv = document.getElementById('depositMessage');
+
+            if (!amount || amount < 100) {
+                messageDiv.textContent = 'Please enter a valid amount (min: ₦100)';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            messageDiv.textContent = 'Processing...';
+            messageDiv.className = 'message info';
+            messageDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/deposit/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        amount: amount,
+                        userId: currentUser.email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.textContent = 'Redirecting to payment...';
+                    messageDiv.className = 'message success';
+                    
+                    // Redirect to Paystack
+                    window.location.href = data.authorization_url;
+                } else {
+                    messageDiv.textContent = data.error || 'Payment initialization failed';
+                    messageDiv.className = 'message error';
+                }
+            } catch (error) {
+                messageDiv.textContent = `Error: ${error.message}`;
+                messageDiv.className = 'message error';
+            }
+        }
+
+        function refreshWallet() {
+            loadWalletData();
+            loadTransactions();
+            loadDeployments();
+            showTemporaryMessage('Refreshed successfully!', 'success');
+        }
+
+        function showTemporaryMessage(message, type) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = message;
+            document.querySelector('.wallet-container').prepend(msgDiv);
+            
+            setTimeout(() => {
+                msgDiv.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('depositModal');
+            if (event.target === modal) {
+                closeDepositModal();
+            }
+        };
+
+        // Load all data
+        loadWalletData();
+        loadTransactions();
+        loadDeployments();
+    </script>
+</body>
+</html>
