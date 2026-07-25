@@ -1,5 +1,5 @@
 // ============================================================
-// Shared Utility Functions for All Pages
+// Shared Utility Functions for All Pages - CyberDark Host
 // ============================================================
 
 // ---------- User Management ----------
@@ -31,11 +31,9 @@ function logout() {
 
 // ---------- Formatting ----------
 function formatCurrency(amount, currency = 'KSH') {
-    // Use KSH (Kenyan Shilling) as default
     return `${currency} ${Number(amount).toLocaleString()}`;
 }
 
-// Alias for quick usage
 function formatKSH(amount) {
     return formatCurrency(amount, 'KSH');
 }
@@ -55,7 +53,7 @@ function showToast(message, type = 'info', duration = 3000) {
         font-weight: 500;
         z-index: 9999;
         animation: slideIn 0.3s ease;
-        background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#6366f1'};
+        background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#8b5cf6'};
         box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         max-width: 90%;
     `;
@@ -69,7 +67,6 @@ function showToast(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// Add toast animations
 (function injectToastStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -164,7 +161,6 @@ function goToWallet() {
 
 // ---------- DOM Ready ----------
 document.addEventListener('DOMContentLoaded', function() {
-    // Update navbar login button text if logged in
     const navLogin = document.querySelector('.btn-login');
     if (navLogin && isLoggedIn()) {
         const user = getCurrentUser();
