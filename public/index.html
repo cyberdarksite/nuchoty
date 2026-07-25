@@ -1,144 +1,817 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberDark Host - Deploy Your Bots</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
+    <title>CyberDark Host | Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        .hero-content h1 .highlight {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        :root {
+            --bg: #fafaf9;
+            --bg-elev: #ffffff;
+            --bg-soft: #f4f4f3;
+            --fg: #0e1016;
+            --fg-muted: #5b6170;
+            --fg-soft: #8a8f9c;
+            --line: rgba(15, 23, 42, 0.07);
+            --line-strong: rgba(15, 23, 42, 0.12);
+            --brand: #8b5cf6;
+            --brand-soft: rgba(139, 92, 246, 0.08);
         }
-        .brand-text {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .dark {
+            --bg: #08090d;
+            --bg-elev: #0f1117;
+            --bg-soft: #14171f;
+            --fg: #ecedf0;
+            --fg-muted: #9ba1ad;
+            --fg-soft: #6b7280;
+            --line: rgba(255, 255, 255, 0.06);
+            --line-strong: rgba(255, 255, 255, 0.12);
+            --brand: #a78bfa;
+            --brand-soft: rgba(167, 139, 250, 0.10);
         }
+        * { -webkit-tap-highlight-color: transparent; }
+        html, body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; }
+        body { font-feature-settings: 'cv11', 'ss01', 'ss03'; -webkit-font-smoothing: antialiased; }
+
+        .surface {
+            background: var(--bg-elev);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            transition: border-color .2s ease;
+        }
+        .surface:hover { border-color: var(--line-strong); }
+        .surface-soft { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px; }
+
+        .hero-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .dark .hero-card {
+            background: linear-gradient(135deg, #5b21b6, #4338ca);
+        }
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at top right, #000 30%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .stat-card {
+            background: var(--bg-elev);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px;
+            transition: all .2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--line-strong);
+        }
+        .stat-card .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .stat-value {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 22px;
+            line-height: 1.1;
+            color: var(--fg);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--fg-soft);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all .15s ease;
+            cursor: pointer;
+            border: none;
+            line-height: 1;
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+            box-shadow: 0 4px 20px -8px rgba(139, 92, 246, 0.5);
         }
-        .btn-primary:hover {
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); }
+        .btn-ghost {
+            background: var(--bg-soft);
+            color: var(--fg);
+            border: 1px solid var(--line);
         }
-        .btn-login {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        .btn-ghost:hover:not(:disabled) { border-color: var(--line-strong); }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
         }
-        .pricing-badge {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
         }
-        .cost-amount {
-            color: #8b5cf6;
+        .btn-block { width: 100%; justify-content: center; }
+
+        .field {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-soft);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--fg);
+            transition: border .15s ease;
         }
-        .balance-amount-large {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .field:focus { border-color: var(--brand); outline: none; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
         }
-        .feature-card:hover {
-            border-color: rgba(139, 92, 246, 0.3);
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.1);
+        @media (min-width: 640px) {
+            .modal-overlay { align-items: center; }
+            .modal-overlay .bottom-sheet { max-width: 28rem; border-radius: 20px; margin: 1rem; }
         }
+        .modal-overlay.active { display: flex; }
+        .bottom-sheet {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 20px 20px 0 0;
+            background: var(--bg-elev);
+            border: 1px solid var(--line);
+            overflow: hidden;
+            animation: slideUpModal .3s ease;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .toast { animation: slideUp .3s ease; }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .status-pill {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.04em;
+        }
+        .status-pending { color: #f59e0b; background: rgba(245,158,11,0.12); }
+        .status-building { color: #8b5cf6; background: rgba(139,92,246,0.12); }
+        .status-deployed { color: #10b981; background: rgba(16,185,129,0.12); }
+        .status-failed { color: #ef4444; background: rgba(239,68,68,0.12); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 10px; }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 6px 20px -8px rgba(139, 92, 246, 0.6);
+        }
+        .eyebrow {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--fg-soft);
+        }
+        .h-section {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: -0.01em;
+            color: var(--fg);
+        }
+
+        .deployment-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        .deployment-item:last-child { border-bottom: none; }
+        .deployment-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .deployment-name { font-weight: 500; }
+        .deployment-details {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--fg-muted);
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .deployment-details a { color: var(--brand); text-decoration: none; }
+        .deployment-details a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Navbar -->
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="brand-icon">🔥</span>
-                <span class="brand-text">CyberDark Host</span>
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 backdrop-blur-xl border-b" style="background:color-mix(in oklab, var(--bg) 80%, transparent); border-color:var(--line)">
+            <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="brand-mark"><i class="fas fa-fire"></i></div>
+                    <div>
+                        <p class="eyebrow">CyberDark Host</p>
+                        <h1 class="text-sm font-semibold" style="color:var(--fg)">Dashboard</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-xl" style="background:var(--brand-soft); border:1px solid var(--line)">
+                        <i class="fas fa-coins text-xs" style="color:var(--brand)"></i>
+                        <span id="headerBalance" class="text-sm font-bold tabular-nums" style="color:var(--brand)">0</span>
+                        <span class="text-[10px] font-medium" style="color:var(--fg-soft)">KSH</span>
+                    </div>
+                    <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-xl surface-soft" style="color:var(--fg-muted)">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <button onclick="logout()" class="w-10 h-10 flex items-center justify-center rounded-xl surface-soft" style="color:var(--fg-muted)">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
             </div>
-            <div class="nav-links">
-                <a href="/" class="active">Home</a>
-                <a href="/deploy.html">Deploy</a>
-                <a href="/wallet.html">Wallet</a>
-                <a href="/login.html" class="btn-login">Login</a>
-            </div>
-        </nav>
+        </header>
 
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Deploy Your Bot <span class="highlight">in Seconds</span></h1>
-                <p>Pay with Paystack and deploy your WhatsApp bots, APIs, and applications directly to Heroku. No hassle, just deploy with CyberDark Host.</p>
-                <div class="hero-buttons">
-                    <a href="/deploy.html" class="btn-primary">🚀 Deploy Now</a>
-                    <a href="/wallet.html" class="btn-secondary">💰 View Wallet</a>
+        <main class="flex-1 max-w-6xl mx-auto w-full px-3 sm:px-4 py-5 space-y-5">
+            <!-- Hero -->
+            <section class="hero-card p-6 md:p-8">
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); color:#fff">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="userRole">Standard Account</span>
+                    </div>
+                    <h2 class="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-2" style="color:#fff">
+                        Welcome back, <span id="userName" class="capitalize">User</span>
+                    </h2>
+                    <p class="text-sm md:text-base mb-6 max-w-lg" style="color:rgba(255,255,255,0.72)">
+                        Deploy your bots with ease. Pay with Paystack and manage everything from one dashboard.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openDeployModal()" class="btn" style="background:rgba(255,255,255,0.95); color:#4f46e5;">
+                            <i class="fas fa-rocket"></i><span>Deploy Now</span>
+                        </button>
+                        <button onclick="openTopUp()" class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.2)">
+                            <i class="fas fa-plus"></i><span>Add Funds</span>
+                        </button>
+                        <a href="/wallet.html" class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.2)">
+                            <i class="fas fa-wallet"></i><span>Wallet</span>
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <span class="stat-number">500+</span>
-                    <span class="stat-label">Apps Deployed</span>
+                <div class="absolute right-4 bottom-4 opacity-[0.07] pointer-events-none hidden sm:block">
+                    <i class="fas fa-fire text-[12rem] -rotate-12"></i>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">200+</span>
-                    <span class="stat-label">Happy Users</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">24/7</span>
-                    <span class="stat-label">Support</span>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Features Section -->
-        <section class="features">
-            <h2>Why CyberDark Host?</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Pay with Paystack</h3>
-                    <p>Secure payments with Paystack. Fund your wallet and deploy instantly.</p>
+            <!-- Stats -->
+            <section>
+                <div class="flex items-end justify-between mb-3">
+                    <div>
+                        <p class="eyebrow">Overview</p>
+                        <h3 class="h-section mt-1">Your Performance</h3>
+                    </div>
+                    <button onclick="refreshAll()" class="text-[11px] font-semibold flex items-center gap-1.5" style="color:var(--brand)">
+                        <i class="fas fa-rotate"></i><span class="hidden sm:inline">Refresh</span>
+                    </button>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Instant Deployment</h3>
-                    <p>Deploy your apps in minutes. Just provide your repo URL and session ID.</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--brand-soft); color:var(--brand)"><i class="fas fa-coins"></i></div>
+                        <p class="stat-value" id="walletBalance">0</p>
+                        <p class="stat-label">Wallet Balance</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(16,185,129,0.12); color:#10b981"><i class="fas fa-rocket"></i></div>
+                        <p class="stat-value" id="deploymentCount">0</p>
+                        <p class="stat-label">Deployments</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b"><i class="fas fa-users"></i></div>
+                        <p class="stat-value" id="referralCount">0</p>
+                        <p class="stat-label">Referrals</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6"><i class="fas fa-chart-line"></i></div>
+                        <p class="stat-value" id="totalSpent">0</p>
+                        <p class="stat-label">Total Spent</p>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Secure & Reliable</h3>
-                    <p>Your data is safe. We use Heroku's secure infrastructure for deployments.</p>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="surface p-4 sm:p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="eyebrow">Actions</p>
+                        <h3 class="h-section mt-1">Quick Actions</h3>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Track Everything</h3>
-                    <p>View your deployment history, wallet balance, and transaction logs.</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="openDeployModal()" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
+                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:var(--brand-soft); color:var(--brand)">
+                            <i class="fas fa-rocket text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Deploy</h4>
+                        <p class="text-[10px]" style="color:var(--fg-soft)">KSH 50 per deploy</p>
+                    </button>
+                    <button onclick="openTopUp()" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
+                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(16,185,129,0.12); color:#10b981">
+                            <i class="fas fa-plus text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Add Funds</h4>
+                        <p class="text-[10px]" style="color:var(--fg-soft)">Deposit KSH</p>
+                    </button>
+                    <a href="/wallet.html" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
+                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(245,158,11,0.12); color:#f59e0b">
+                            <i class="fas fa-wallet text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Wallet</h4>
+                        <p class="text-[10px]" style="color:var(--fg-soft)">View balance</p>
+                    </a>
+                    <button onclick="copyReferralLink()" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
+                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(139,92,246,0.12); color:#8b5cf6">
+                            <i class="fas fa-share-alt text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Refer</h4>
+                        <p class="text-[10px]" style="color:var(--fg-soft)">Share & earn</p>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Recent Deployments -->
+            <section class="surface p-4 sm:p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="eyebrow">History</p>
+                        <h3 class="h-section mt-1">Recent Deployments</h3>
+                    </div>
+                    <a href="/wallet.html" class="text-[11px] font-semibold" style="color:var(--brand)">View all →</a>
+                </div>
+                <div id="deploymentsList">
+                    <div class="text-center py-8" style="color:var(--fg-soft)">
+                        <i class="fas fa-spinner fa-pulse text-2xl mb-3"></i>
+                        <p class="text-sm">Loading deployments...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-8 pt-6 border-t" style="border-color:var(--line)">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs" style="color:var(--fg-soft)">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-fire" style="color:var(--brand)"></i>
+                        <span>&copy; 2026 CyberDark Host. All rights reserved.</span>
+                    </div>
+                    <div class="flex gap-6">
+                        <a href="#" class="hover:opacity-80 transition">Terms</a>
+                        <a href="#" class="hover:opacity-80 transition">Privacy</a>
+                        <button onclick="showToast('Contact support at support@cyberdark.host', 'info')" class="hover:opacity-80 transition">Support</button>
+                    </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Pricing Section -->
-        <section class="pricing">
-            <h2>Simple Pricing</h2>
-            <div class="pricing-cards">
-                <div class="pricing-card">
-                    <div class="pricing-badge">🔥 Popular</div>
-                    <h3>Pay as You Go</h3>
-                    <div class="price">KSH 50 <span>/ deployment</span></div>
-                    <ul>
-                        <li>✅ Deploy any public GitHub repo</li>
-                        <li>✅ Set your SESSION_ID</li>
-                        <li>✅ 24/7 Support</li>
-                        <li>✅ Deployment tracking</li>
-                        <li>✅ No subscription required</li>
-                        <li>✅ Real-time logs</li>
-                    </ul>
-                    <a href="/deposit.html" class="btn-primary">Get Started</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <!-- ============ DEPLOY MODAL ============ -->
+    <div id="deployModal" class="modal-overlay">
+        <div class="bottom-sheet">
+            <div class="sticky top-0 p-4 border-b flex justify-between items-center" style="background:var(--bg-elev); border-color:var(--line)">
+                <div>
+                    <h3 class="font-display text-base font-semibold" style="color:var(--fg)">🚀 Deploy Application</h3>
+                    <p class="text-[11px]" style="color:var(--fg-muted)">Cost: KSH 50 per deployment</p>
+                </div>
+                <button onclick="closeModal('deployModal')" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--bg-soft); color:var(--fg-muted)">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">App Name</label>
+                    <input type="text" id="deployAppName" placeholder="my-whatsapp-bot" class="field mt-2">
+                    <small class="text-[10px]" style="color:var(--fg-soft)">Lowercase, numbers, and hyphens only</small>
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">GitHub Repository URL</label>
+                    <input type="url" id="deployRepoUrl" placeholder="https://github.com/username/repo" class="field mt-2">
+                    <small class="text-[10px]" style="color:var(--fg-soft)">Public repository only</small>
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">SESSION_ID</label>
+                    <input type="text" id="deploySessionId" placeholder="Enter your WhatsApp session ID" class="field mt-2">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">Team</label>
+                    <select id="deployTeam" class="field mt-2">
+                        <option value="iamricky">iamricky</option>
+                        <option value="appdevs-team">appdevs-team</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl" style="background:var(--bg-soft); border:1px solid var(--line)">
+                    <span class="text-sm font-semibold" style="color:var(--fg)">Deployment Cost</span>
+                    <span class="text-sm font-bold" style="color:var(--brand)">KSH 50</span>
+                </div>
+                <button onclick="processDeploy()" id="deployBtn" class="btn btn-primary btn-block py-3.5">
+                    <i class="fas fa-rocket"></i><span>Deploy Now</span>
+                </button>
+                <div id="deployResult" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOP UP MODAL ============ -->
+    <div id="topUpModal" class="modal-overlay">
+        <div class="bottom-sheet">
+            <div class="sticky top-0 p-4 border-b flex justify-between items-center" style="background:var(--bg-elev); border-color:var(--line)">
+                <div>
+                    <h3 class="font-display text-base font-semibold" style="color:var(--fg)">💰 Add Funds</h3>
+                    <p class="text-[11px]" style="color:var(--fg-muted)">Top up your wallet securely</p>
+                </div>
+                <button onclick="closeModal('topUpModal')" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--bg-soft); color:var(--fg-muted)">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">Amount (KSH)</label>
+                    <input type="number" id="depositAmount" placeholder="Min: 100" class="field mt-2">
+                    <small class="text-[10px]" style="color:var(--fg-soft)">Minimum deposit: KSH 100</small>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="setDepositAmount(100)" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--bg-soft); border:1px solid var(--line); color:var(--fg)">KSH 100</button>
+                    <button onclick="setDepositAmount(500)" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--bg-soft); border:1px solid var(--line); color:var(--fg)">KSH 500</button>
+                    <button onclick="setDepositAmount(1000)" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--bg-soft); border:1px solid var(--line); color:var(--fg)">KSH 1,000</button>
+                    <button onclick="setDepositAmount(2000)" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--bg-soft); border:1px solid var(--line); color:var(--fg)">KSH 2,000</button>
+                    <button onclick="setDepositAmount(5000)" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--bg-soft); border:1px solid var(--line); color:var(--fg)">KSH 5,000</button>
+                </div>
+                <button onclick="processDeposit()" id="depositBtn" class="btn btn-success btn-block py-3.5">
+                    <i class="fas fa-credit-card"></i><span>Pay with Paystack</span>
+                </button>
+                <div id="depositResult" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div id="toastContainer" class="fixed bottom-5 left-4 right-4 lg:left-auto lg:right-5 lg:w-80 z-[100] pointer-events-none space-y-2"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        let currentUser = null;
+
+        // ============ HELPERS ============
+        function formatKSH(amount) {
+            return `KSH ${Number(amount).toLocaleString()}`;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const colors = {
+                success: 'bg-emerald-500',
+                error: 'bg-rose-500',
+                info: 'bg-cyan-600',
+                warning: 'bg-amber-500'
+            };
+            const icons = {
+                success: 'circle-check',
+                error: 'triangle-exclamation',
+                info: 'circle-info',
+                warning: 'triangle-exclamation'
+            };
+            const toast = document.createElement('div');
+            toast.className = `toast ${colors[type]} text-white p-3.5 rounded-xl shadow-lg flex items-center gap-3 pointer-events-auto`;
+            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i><span class="font-medium text-sm">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        function setDepositAmount(amount) {
+            document.getElementById('depositAmount').value = amount;
+        }
+
+        function openDeployModal() {
+            openModal('deployModal');
+            document.getElementById('deployResult').classList.add('hidden');
+            document.getElementById('deployResult').innerHTML = '';
+        }
+
+        function openTopUp() {
+            openModal('topUpModal');
+            document.getElementById('depositResult').classList.add('hidden');
+            document.getElementById('depositResult').innerHTML = '';
+        }
+
+        // ============ API HELPERS ============
+        async function apiGet(path) {
+            const res = await fetch(path, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            return res.json();
+        }
+
+        async function apiPost(path, body) {
+            const res = await fetch(path, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            return res.json();
+        }
+
+        // ============ LOAD USER DATA ============
+        async function loadUserData() {
+            try {
+                const user = await apiGet('/api/profile');
+                currentUser = user.user || user;
+                document.getElementById('userName').textContent = currentUser.username || 'User';
+                document.getElementById('headerBalance').textContent = (currentUser.walletBalance || 0).toLocaleString();
+                document.getElementById('walletBalance').textContent = (currentUser.walletBalance || 0).toLocaleString();
+                document.getElementById('totalSpent').textContent = (currentUser.totalSpent || 0).toLocaleString();
+                document.getElementById('referralCount').textContent = (currentUser.referrals?.length || 0);
+                if (currentUser.role === 'admin') {
+                    document.getElementById('userRole').textContent = 'Admin Account';
+                }
+            } catch (err) {
+                console.error('Error loading user:', err);
+                showToast('Failed to load user data', 'error');
+            }
+        }
+
+        // ============ LOAD DEPLOYMENTS ============
+        async function loadDeployments() {
+            const container = document.getElementById('deploymentsList');
+            try {
+                const data = await apiGet(`/api/deployments/${currentUser?.email || ''}`);
+                const deployments = data.deployments || [];
+                if (!deployments.length) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:var(--brand-soft); color:var(--brand)">
+                                <i class="fas fa-rocket text-xl"></i>
+                            </div>
+                            <h3 class="font-display text-base font-semibold mb-1" style="color:var(--fg)">No deployments yet</h3>
+                            <p class="text-xs mb-4" style="color:var(--fg-muted)">Deploy your first app now!</p>
+                            <button onclick="openDeployModal()" class="btn btn-primary inline-flex"><i class="fas fa-plus text-[11px]"></i><span>Deploy Now</span></button>
+                        </div>
+                    `;
+                    return;
+                }
+                container.innerHTML = deployments.slice(0, 5).map(d => `
+                    <div class="deployment-item">
+                        <div class="deployment-info">
+                            <span class="deployment-name">📱 ${d.appName}</span>
+                            <span class="status-pill status-${d.status}">${d.status}</span>
+                        </div>
+                        <div class="deployment-details">
+                            <span>💰 ${formatKSH(d.amountPaid || 0)}</span>
+                            <span>📅 ${new Date(d.createdAt).toLocaleDateString()}</span>
+                            ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View App</a>` : ''}
+                            ${d.id ? `<a href="/logs/${d.id}" target="_blank">📋 Logs</a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('deploymentCount').textContent = deployments.length;
+            } catch (err) {
+                console.error('Error loading deployments:', err);
+                container.innerHTML = `<p class="text-center py-8 text-sm text-rose-500">Failed to load deployments</p>`;
+            }
+        }
+
+        // ============ DEPLOY ============
+        async function processDeploy() {
+            const appName = document.getElementById('deployAppName').value.trim();
+            const repoUrl = document.getElementById('deployRepoUrl').value.trim();
+            const sessionId = document.getElementById('deploySessionId').value.trim();
+            const teamName = document.getElementById('deployTeam').value;
+            const resultDiv = document.getElementById('deployResult');
+            const btn = document.getElementById('deployBtn');
+
+            if (!appName || !repoUrl || !sessionId) {
+                resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                resultDiv.innerHTML = '⚠️ Please fill in all fields';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Deploying...</span>';
+            resultDiv.classList.add('hidden');
+
+            try {
+                const data = await apiPost('/api/deploy', {
+                    email: currentUser.email,
+                    appName,
+                    repoUrl,
+                    sessionId,
+                    teamName
+                });
+
+                if (data.success) {
+                    resultDiv.className = 'p-3 rounded-xl text-sm text-emerald-500';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Deployment started!</strong><br>
+                        App: ${data.appName}<br>
+                        URL: <a href="${data.appUrl}" target="_blank" style="color:var(--brand)">${data.appUrl}</a><br>
+                        <a href="/logs/${data.deploymentId}" target="_blank" style="color:var(--brand)">📋 View Logs</a>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showToast('Deployment started successfully!', 'success');
+                    loadDeployments();
+                    loadUserData();
+                    closeModal('deployModal');
+                } else {
+                    resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                    resultDiv.innerHTML = `❌ ${data.error || 'Deployment failed'}`;
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                resultDiv.innerHTML = `❌ ${err.message || 'Deployment failed'}`;
+                resultDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i><span>Deploy Now</span>';
+            }
+        }
+
+        // ============ DEPOSIT ============
+        async function processDeposit() {
+            const amount = parseInt(document.getElementById('depositAmount').value);
+            const resultDiv = document.getElementById('depositResult');
+            const btn = document.getElementById('depositBtn');
+
+            if (!amount || amount < 100) {
+                resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                resultDiv.innerHTML = '⚠️ Please enter a valid amount (min: KSH 100)';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Processing...</span>';
+            resultDiv.classList.add('hidden');
+
+            try {
+                const data = await apiPost('/api/deposit/initialize', {
+                    email: currentUser.email,
+                    amount: amount,
+                    userId: currentUser._id || currentUser.email
+                });
+
+                if (data.success) {
+                    resultDiv.className = 'p-3 rounded-xl text-sm text-emerald-500';
+                    resultDiv.innerHTML = '✅ Redirecting to Paystack...';
+                    resultDiv.classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.href = data.authorization_url;
+                    }, 1500);
+                } else {
+                    resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                    resultDiv.innerHTML = `❌ ${data.error || 'Payment initialization failed'}`;
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                resultDiv.className = 'p-3 rounded-xl text-sm text-rose-500';
+                resultDiv.innerHTML = `❌ ${err.message || 'Payment failed'}`;
+                resultDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-credit-card"></i><span>Pay with Paystack</span>';
+            }
+        }
+
+        // ============ REFERRAL ============
+        function copyReferralLink() {
+            const code = currentUser?.refCode || '';
+            if (!code) {
+                showToast('Referral code not available', 'error');
+                return;
+            }
+            const link = `${window.location.origin}/register?ref=${encodeURIComponent(code)}`;
+            navigator.clipboard.writeText(link)
+                .then(() => showToast('Referral link copied! Share it with friends.', 'success'))
+                .catch(() => showToast('Could not copy link', 'error'));
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        // ============ REFRESH ============
+        function refreshAll() {
+            loadUserData();
+            loadDeployments();
+            showToast('Refreshed!', 'info');
+        }
+
+        // ============ THEME ============
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // ============ INIT ============
+        loadUserData();
+        setTimeout(loadDeployments, 500);
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            loadUserData();
+        }, 60000);
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
