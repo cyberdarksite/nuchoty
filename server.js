@@ -31,19 +31,34 @@ app.post('/deploy', async (req, res) => {
         : `subzero-${uuidv4().slice(0, 6)}`;
 
     try {
-        // Step 1: Create Heroku app under iamricky team
+        // Step 1: Create Heroku app WITHOUT organization parameter
+        // The API key's scope determines which team it creates apps under
         const createAppRes = await axios.post(
             'https://api.heroku.com/apps', 
             { 
-                name: generatedAppName,
-                organization: 'iamricky'  // Using organization for team deployment
+                name: generatedAppName
+                // Don't include organization or team parameter
             }, 
             { headers: herokuHeaders }
         );
 
-        console.log('App created:', createAppRes.data);
+        console.log('App created:', createAppRes.data.id);
 
-        // Step 2: Set config vars
+        // Step 2: Transfer app to iamricky team (if needed)
+        try {
+            await axios.patch(
+                `https://api.heroku.com/apps/${generatedAppName}`,
+                { 
+                    organization: 'iamricky' 
+                },
+                { headers: herokuHeaders }
+            );
+            console.log('App transferred to iamricky team');
+        } catch (transferError) {
+            console.log('App already in correct team or transfer not needed');
+        }
+
+        // Step 3: Set config vars
         await axios.patch(
             `https://api.heroku.com/apps/${generatedAppName}/config-vars`,
             { SESSION_ID: sessionId },
@@ -52,7 +67,7 @@ app.post('/deploy', async (req, res) => {
 
         console.log('Config vars set');
 
-        // Step 3: Trigger build
+        // Step 4: Trigger build
         await axios.post(
             `https://api.heroku.com/apps/${generatedAppName}/builds`,
             { source_blob: { url: GITHUB_REPO_TARBALL } },
@@ -72,7 +87,6 @@ app.post('/deploy', async (req, res) => {
     } catch (error) {
         console.error('Deployment error:', error.response?.data || error.message);
         
-        // More detailed error response
         const errorDetails = error.response?.data || error.message;
         const statusCode = error.response?.status || 500;
         
@@ -86,5 +100,5 @@ app.post('/deploy', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Heroku Deployer running on port ${PORT}`);
-    console.log(`Deploying to team: iamricky`);
+    console.log(`Using API key with team access: iamricky`);
 });
