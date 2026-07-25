@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
-const HEROKU_TEAM = process.env.HEROKU_TEAM || 'iamricky'; // Set your team name
+const HEROKU_TEAM = process.env.HEROKU_TEAM || 'iamricky';
 const GITHUB_REPO_TARBALL = 'https://github.com/KAMRAN-SMD/KAMRAN-MD/tarball/main';
 
 app.use(express.static('public'));
@@ -40,7 +40,7 @@ app.post('/deploy', async (req, res) => {
             'https://api.heroku.com/apps', 
             { 
                 name: generatedAppName,
-                team: targetTeam // Add team parameter
+                organization: targetTeam // FIXED: Use 'organization' instead of 'team'
             }, 
             { headers: herokuHeaders }
         );
@@ -58,12 +58,11 @@ app.post('/deploy', async (req, res) => {
         );
 
         // Step 3: Trigger build
-        await axios.post(
+        const buildResponse = await axios.post(
             `https://api.heroku.com/apps/${generatedAppName}/builds`,
             { 
                 source_blob: { 
-                    url: GITHUB_REPO_TARBALL,
-                    version: 'main' 
+                    url: GITHUB_REPO_TARBALL
                 } 
             },
             { headers: herokuHeaders }
@@ -78,6 +77,7 @@ app.post('/deploy', async (req, res) => {
             appUrl: `https://${generatedAppName}.herokuapp.com`,
             team: targetTeam,
             dashboardUrl: `https://dashboard.heroku.com/teams/${targetTeam}/apps`,
+            buildId: buildResponse.data.id,
             status: 'Building... (This takes 3-5 minutes)'
         });
 
@@ -112,13 +112,13 @@ app.get('/team-info', async (req, res) => {
         
         // Get team details
         const teamRes = await axios.get(
-            `https://api.heroku.com/teams/${teamName}`,
+            `https://api.heroku.com/organizations/${teamName}`,
             { headers: herokuHeaders }
         );
         
         // Get team apps
         const appsRes = await axios.get(
-            `https://api.heroku.com/apps?team=${teamName}`,
+            `https://api.heroku.com/apps?organization=${teamName}`,
             { headers: herokuHeaders }
         );
 
@@ -132,6 +132,7 @@ app.get('/team-info', async (req, res) => {
             }))
         });
     } catch (error) {
+        console.error('Team info error:', error.response?.data || error.message);
         res.status(500).json({
             error: 'Failed to fetch team info',
             details: error.response?.data || error.message
