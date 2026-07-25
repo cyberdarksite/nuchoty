@@ -7,6 +7,8 @@ import mongoose from 'mongoose';
 import crypto from 'crypto';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -16,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Environment variables
+// ==================== ENVIRONMENT VARIABLES ====================
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
 const HEROKU_TEAM = process.env.HEROKU_TEAM || 'iamricky';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cyberdark-host';
@@ -24,59 +26,41 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
 const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY || '';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 const DEPLOYMENT_COST = parseInt(process.env.DEPLOYMENT_COST) || 50;
-
-// ==================== LOGGING SYSTEM ====================
-
-const LOG_DIR = './logs';
-if (!fs.existsSync(LOG_DIR)) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
-}
-
-const LOG_LEVELS = { ERROR: 0, WARN: 1, INFO: 2, DEBUG: 3, TRACE: 4 };
-const LOG_LEVEL = process.env.LOG_LEVEL || 'INFO';
-
-function log(level, message, data = null) {
-    const now = new Date();
-    const timestamp = now.toISOString();
-    const levelName = Object.keys(LOG_LEVELS).find(key => LOG_LEVELS[key] === level) || 'INFO';
-    if (level > LOG_LEVELS[LOG_LEVEL]) return;
-    const logEntry = `[${timestamp}] [${levelName}] ${message}${data ? ' | ' + JSON.stringify(data) : ''}\n`;
-    const colors = { ERROR: '\x1b[31m', WARN: '\x1b[33m', INFO: '\x1b[36m', DEBUG: '\x1b[35m', TRACE: '\x1b[37m' };
-    const reset = '\x1b[0m';
-    console.log(`${colors[levelName] || ''}${logEntry}${reset}`);
-    fs.appendFileSync(path.join(LOG_DIR, 'combined.log'), logEntry);
-    if (level === LOG_LEVELS.ERROR) fs.appendFileSync(path.join(LOG_DIR, 'error.log'), logEntry);
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'cyberdark-secret-key-2024';
 
 // ==================== MIDDLEWARE ====================
-
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==================== MONGODB CONNECTION ====================
-
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
-    log(LOG_LEVELS.INFO, '✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
 }).catch(err => {
-    log(LOG_LEVELS.ERROR, '❌ MongoDB connection error:', err.message);
+    console.error('❌ MongoDB connection error:', err.message);
 });
 
 // ==================== DATABASE SCHEMAS ====================
 
+// User Schema
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    fullName: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    passwordHash: { type: String, required: true },
+    fullName: { type: String },
     walletBalance: { type: Number, default: 0 },
     totalDeposits: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 },
+    refCode: { type: String, unique: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    emailVerified: { type: Boolean, default: false },
+    isBanned: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
     transactions: [{
-        type: { type: String, enum: ['deposit', 'deployment'], required: true },
+        type: { type: String, enum: ['deposit', 'deployment', 'referral'], required: true },
         amount: { type: Number, required: true },
         reference: { type: String },
         description: { type: String },
@@ -86,35 +70,29 @@ const userSchema = new mongoose.Schema({
     deployments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deployment' }]
 });
 
+// Payment Schema
 const paymentSchema = new mongoose.Schema({
     userId: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, lowercase: true },
     amount: { type: Number, required: true },
     reference: { type: String, unique: true, required: true },
     type: { type: String, enum: ['deposit', 'deployment'], default: 'deposit' },
-    status: { 
-        type: String, 
-        enum: ['pending', 'success', 'failed', 'expired'],
-        default: 'pending'
-    },
+    status: { type: String, enum: ['pending', 'success', 'failed', 'expired'], default: 'pending' },
     paymentDate: { type: Date, default: Date.now },
     metadata: { type: Object, default: {} }
 });
 
+// Deployment Schema
 const deploymentSchema = new mongoose.Schema({
     userId: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, lowercase: true },
     appName: { type: String, required: true },
     repoUrl: { type: String, required: true },
     sessionId: { type: String, required: true },
     teamName: { type: String, default: 'iamricky' },
     paymentReference: { type: String },
     amountPaid: { type: Number, default: DEPLOYMENT_COST },
-    deploymentStatus: {
-        type: String,
-        enum: ['pending', 'building', 'deployed', 'failed'],
-        default: 'pending'
-    },
+    deploymentStatus: { type: String, enum: ['pending', 'building', 'deployed', 'failed'], default: 'pending' },
     appUrl: { type: String },
     buildId: { type: String },
     logs: [{
@@ -132,7 +110,6 @@ const Payment = mongoose.model('Payment', paymentSchema);
 const Deployment = mongoose.model('Deployment', deploymentSchema);
 
 // ==================== HEROKU API ====================
-
 const herokuHeaders = {
     'Authorization': `Bearer ${HEROKU_API_KEY}`,
     'Accept': 'application/vnd.heroku+json; version=3',
@@ -140,13 +117,44 @@ const herokuHeaders = {
 };
 
 // ==================== PAYSTACK API ====================
-
 const paystackHeaders = {
     'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
     'Content-Type': 'application/json'
 };
 
-// ==================== DEPLOYMENT LOG HELPER ====================
+// ==================== HELPER FUNCTIONS ====================
+
+const generateRefCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
+const generateToken = (user) => {
+    return jwt.sign(
+        { userId: user._id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+    );
+};
+
+async function findOrCreateUser(email, username = null) {
+    const normalizedEmail = email.toLowerCase();
+    let user = await User.findOne({ email: normalizedEmail });
+    
+    if (!user) {
+        user = new User({
+            username: username || normalizedEmail.split('@')[0],
+            email: normalizedEmail,
+            passwordHash: await bcrypt.hash('temp_password_' + Date.now(), 10),
+            fullName: username || normalizedEmail.split('@')[0],
+            walletBalance: 0,
+            refCode: generateRefCode()
+        });
+        await user.save();
+        console.log(`✅ Auto-created user: ${normalizedEmail}`);
+    }
+    
+    return user;
+}
 
 async function addDeploymentLog(deploymentId, message, type = 'info') {
     try {
@@ -154,11 +162,177 @@ async function addDeploymentLog(deploymentId, message, type = 'info') {
             $push: { logs: { timestamp: new Date(), message, type } }
         });
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Failed to add deployment log:', error.message);
+        console.error('Failed to add deployment log:', error.message);
     }
 }
 
-// ==================== DEPLOYMENT PROCESS ====================
+// ==================== AUTH ROUTES ====================
+
+// Register
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, email, password, ref } = req.body;
+        
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email and password required' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        }
+
+        const normalizedEmail = email.toLowerCase();
+        
+        // Check if user exists
+        const existingUser = await User.findOne({ 
+            $or: [{ email: normalizedEmail }, { username: username }] 
+        });
+        
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email or username already used' });
+        }
+
+        // Create user
+        const passwordHash = await bcrypt.hash(password, 12);
+        const refCode = generateRefCode();
+        let initialCoins = 0;
+        let referrer = null;
+
+        // Handle referral
+        if (ref) {
+            referrer = await User.findOne({ refCode: ref.toUpperCase() });
+            if (referrer) {
+                initialCoins = 1;
+            }
+        }
+
+        const user = new User({
+            username,
+            email: normalizedEmail,
+            passwordHash,
+            fullName: username,
+            walletBalance: initialCoins,
+            refCode,
+            referredBy: referrer ? referrer._id : null,
+            emailVerified: true
+        });
+
+        await user.save();
+
+        // Reward referrer
+        if (referrer) {
+            referrer.walletBalance += 2;
+            referrer.transactions.push({
+                type: 'referral',
+                amount: 2,
+                description: `Referral bonus for ${username}`,
+                status: 'success'
+            });
+            await referrer.save();
+        }
+
+        const token = generateToken(user);
+
+        res.json({
+            success: true,
+            message: 'Registration successful!',
+            token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                walletBalance: user.walletBalance,
+                refCode: user.refCode
+            }
+        });
+
+    } catch (error) {
+        console.error('Register error:', error);
+        res.status(500).json({ error: 'Server error during registration' });
+    }
+});
+
+// Login
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password required' });
+        }
+
+        const normalizedEmail = email.toLowerCase();
+        const user = await User.findOne({ email: normalizedEmail });
+
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        if (user.isBanned) {
+            return res.status(403).json({ error: 'Account has been banned' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const token = generateToken(user);
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                walletBalance: user.walletBalance,
+                refCode: user.refCode
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Server error during login' });
+    }
+});
+
+// Get user profile
+app.get('/api/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                walletBalance: user.walletBalance,
+                totalDeposits: user.totalDeposits,
+                totalSpent: user.totalSpent,
+                refCode: user.refCode
+            }
+        });
+
+    } catch (error) {
+        console.error('Profile error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// ==================== DEPLOYMENT LOG HELPER ====================
 
 async function processDeployment(payment) {
     const metadata = payment.metadata;
@@ -166,7 +340,7 @@ async function processDeployment(payment) {
 
     const deployment = new Deployment({
         userId,
-        email,
+        email: email.toLowerCase(),
         appName: appName || `app-${uuidv4().slice(0, 8)}`,
         repoUrl,
         sessionId,
@@ -182,7 +356,7 @@ async function processDeployment(payment) {
         await addDeploymentLog(deployment._id, `📝 Deployment created for ${deployment.appName}`, 'info');
         await addDeploymentLog(deployment._id, `💰 Payment confirmed: KSH ${DEPLOYMENT_COST}`, 'success');
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) throw new Error('User not found');
 
         if (user.walletBalance < DEPLOYMENT_COST) {
@@ -205,6 +379,7 @@ async function processDeployment(payment) {
         await addDeploymentLog(deployment._id, `💰 KSH ${DEPLOYMENT_COST} deducted from wallet`, 'success');
         await addDeploymentLog(deployment._id, `📊 Remaining balance: KSH ${user.walletBalance}`, 'info');
 
+        // Create Heroku app
         await addDeploymentLog(deployment._id, `🌐 Creating Heroku app: ${deployment.appName}...`, 'info');
         const createAppRes = await axios.post(
             'https://api.heroku.com/organizations/apps',
@@ -214,6 +389,7 @@ async function processDeployment(payment) {
         await addDeploymentLog(deployment._id, `✅ Heroku app created: ${deployment.appName}`, 'success');
         await addDeploymentLog(deployment._id, `🔗 App URL: ${createAppRes.data.web_url}`, 'info');
 
+        // Set config vars
         await addDeploymentLog(deployment._id, `⚙️ Setting configuration variables...`, 'info');
         await axios.patch(
             `https://api.heroku.com/apps/${deployment.appName}/config-vars`,
@@ -227,6 +403,7 @@ async function processDeployment(payment) {
         );
         await addDeploymentLog(deployment._id, `✅ Configuration variables set`, 'success');
 
+        // Trigger build
         await addDeploymentLog(deployment._id, `📦 Building from repository: ${repoUrl}`, 'info');
         const buildRes = await axios.post(
             `https://api.heroku.com/apps/${deployment.appName}/builds`,
@@ -250,7 +427,7 @@ async function processDeployment(payment) {
         return deployment;
 
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Deployment error:', error.message);
+        console.error('Deployment error:', error.message);
         deployment.deploymentStatus = 'failed';
         deployment.errorMessage = error.message;
         await addDeploymentLog(deployment._id, `❌ Deployment failed: ${error.message}`, 'error');
@@ -265,40 +442,62 @@ async function processDeployment(payment) {
 app.post('/api/deposit/initialize', async (req, res) => {
     try {
         const { email, amount, userId } = req.body;
+        
         if (!email || !amount || !userId) {
             return res.status(400).json({ success: false, error: 'Email, amount, and userId are required' });
         }
+        
         if (amount < 100) {
             return res.status(400).json({ success: false, error: 'Minimum deposit is 100 KSH' });
         }
+
+        await findOrCreateUser(email);
 
         const reference = `DEPOSIT-${Date.now()}-${uuidv4().slice(0, 8)}`;
         const response = await axios.post(
             'https://api.paystack.co/transaction/initialize',
             {
-                email,
+                email: email.toLowerCase(),
                 amount: amount * 100,
                 reference,
                 callback_url: `${APP_URL}/api/payment/verify/${reference}`,
-                metadata: { userId, type: 'deposit', email, amount }
+                metadata: { userId, type: 'deposit', email: email.toLowerCase(), amount }
             },
             { headers: paystackHeaders }
         );
 
         if (response.data.status) {
             const payment = new Payment({
-                userId, email, amount, reference, type: 'deposit',
+                userId,
+                email: email.toLowerCase(),
+                amount,
+                reference,
+                type: 'deposit',
                 status: 'pending',
-                metadata: { authorization_url: response.data.data.authorization_url, access_code: response.data.data.access_code }
+                metadata: { 
+                    authorization_url: response.data.data.authorization_url, 
+                    access_code: response.data.data.access_code 
+                }
             });
             await payment.save();
-            return res.json({ success: true, authorization_url: response.data.data.authorization_url, reference });
+            return res.json({ 
+                success: true, 
+                authorization_url: response.data.data.authorization_url, 
+                reference 
+            });
         } else {
-            return res.status(400).json({ success: false, error: response.data.message || 'Payment initialization failed' });
+            return res.status(400).json({ 
+                success: false, 
+                error: response.data.message || 'Payment initialization failed' 
+            });
         }
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Deposit error:', error.response?.data || error.message);
-        res.status(500).json({ success: false, error: 'Failed to initialize deposit', details: error.response?.data || error.message });
+        console.error('Deposit error:', error.response?.data || error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to initialize deposit', 
+            details: error.response?.data || error.message 
+        });
     }
 });
 
@@ -316,7 +515,11 @@ app.get('/api/payment/verify/:reference', async (req, res) => {
             const metadata = paymentData.metadata || {};
             const payment = await Payment.findOneAndUpdate(
                 { reference },
-                { status: 'success', paymentDate: new Date(), metadata: { ...paymentData, ...metadata } },
+                { 
+                    status: 'success', 
+                    paymentDate: new Date(), 
+                    metadata: { ...paymentData, ...metadata } 
+                },
                 { new: true }
             );
 
@@ -345,7 +548,7 @@ app.get('/api/payment/verify/:reference', async (req, res) => {
             return res.redirect(`${APP_URL}/wallet?status=failed`);
         }
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Verify error:', error.message);
+        console.error('Verify error:', error.message);
         res.redirect(`${APP_URL}/wallet?status=error`);
     }
 });
@@ -390,7 +593,7 @@ app.post('/api/payment/webhook', async (req, res) => {
         }
         res.status(200).json({ success: true });
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Webhook error:', error.message);
+        console.error('Webhook error:', error.message);
         res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
@@ -399,14 +602,15 @@ app.post('/api/payment/webhook', async (req, res) => {
 app.post('/api/deploy', async (req, res) => {
     try {
         const { email, appName, repoUrl, sessionId, teamName } = req.body;
+        
         if (!email || !appName || !repoUrl || !sessionId) {
-            return res.status(400).json({ success: false, error: 'Email, appName, repoUrl, and sessionId are required' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Email, appName, repoUrl, and sessionId are required' 
+            });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ success: false, error: 'User not found. Please deposit funds first.' });
-        }
+        const user = await findOrCreateUser(email);
 
         if (user.walletBalance < DEPLOYMENT_COST) {
             return res.status(400).json({
@@ -421,12 +625,19 @@ app.post('/api/deploy', async (req, res) => {
         const reference = `DEPLOY-${Date.now()}-${uuidv4().slice(0, 8)}`;
         const payment = new Payment({
             userId: user._id.toString(),
-            email,
+            email: email.toLowerCase(),
             amount: DEPLOYMENT_COST,
             reference,
             type: 'deployment',
             status: 'success',
-            metadata: { appName, repoUrl, sessionId, teamName, userId: user._id.toString(), email }
+            metadata: { 
+                appName, 
+                repoUrl, 
+                sessionId, 
+                teamName, 
+                userId: user._id.toString(), 
+                email: email.toLowerCase() 
+            }
         });
         await payment.save();
 
@@ -446,7 +657,7 @@ app.post('/api/deploy', async (req, res) => {
         });
 
     } catch (error) {
-        log(LOG_LEVELS.ERROR, 'Deployment error:', error.response?.data || error.message);
+        console.error('Deployment error:', error.response?.data || error.message);
         res.status(500).json({
             success: false,
             error: 'Deployment failed',
@@ -484,7 +695,12 @@ app.get('/api/deployment-logs/:deploymentId', async (req, res) => {
 app.get('/api/deployments/:email', async (req, res) => {
     try {
         const { email } = req.params;
-        const deployments = await Deployment.find({ email }).sort({ createdAt: -1 });
+        const normalizedEmail = email.toLowerCase();
+        
+        await findOrCreateUser(normalizedEmail);
+        
+        const deployments = await Deployment.find({ email: normalizedEmail }).sort({ createdAt: -1 });
+        
         res.json({
             success: true,
             count: deployments.length,
@@ -500,7 +716,12 @@ app.get('/api/deployments/:email', async (req, res) => {
             }))
         });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to fetch deployments', details: error.message });
+        console.error('Failed to fetch deployments:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch deployments', 
+            details: error.message 
+        });
     }
 });
 
@@ -508,13 +729,14 @@ app.get('/api/deployments/:email', async (req, res) => {
 app.get('/api/wallet/:email', async (req, res) => {
     try {
         const { email } = req.params;
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
+        const normalizedEmail = email.toLowerCase();
+        
+        const user = await findOrCreateUser(normalizedEmail);
+        
         res.json({
             success: true,
             email: user.email,
+            username: user.username,
             walletBalance: user.walletBalance,
             totalDeposits: user.totalDeposits,
             totalSpent: user.totalSpent,
@@ -522,7 +744,12 @@ app.get('/api/wallet/:email', async (req, res) => {
             deploymentCount: user.deployments.length
         });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to fetch wallet', details: error.message });
+        console.error('Failed to fetch wallet:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch wallet', 
+            details: error.message 
+        });
     }
 });
 
@@ -530,13 +757,21 @@ app.get('/api/wallet/:email', async (req, res) => {
 app.get('/api/transactions/:email', async (req, res) => {
     try {
         const { email } = req.params;
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
-        res.json({ success: true, transactions: user.transactions.sort((a, b) => b.date - a.date) });
+        const normalizedEmail = email.toLowerCase();
+        
+        const user = await findOrCreateUser(normalizedEmail);
+        
+        res.json({ 
+            success: true, 
+            transactions: user.transactions.sort((a, b) => b.date - a.date) 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to fetch transactions', details: error.message });
+        console.error('Failed to fetch transactions:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch transactions', 
+            details: error.message 
+        });
     }
 });
 
@@ -604,6 +839,11 @@ app.get('/logs/:deploymentId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'logs.html'));
 });
 
+// 13. Serve index page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ success: false, error: 'Route not found', path: req.path });
@@ -611,15 +851,15 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-    log(LOG_LEVELS.ERROR, 'Unhandled error:', err.message);
+    console.error('Unhandled error:', err.message);
     res.status(500).json({ success: false, error: 'Internal server error', details: err.message });
 });
 
-// Start server
+// ==================== START SERVER ====================
 app.listen(PORT, () => {
-    log(LOG_LEVELS.INFO, `🔥 CyberDark Host running on port ${PORT}`);
-    log(LOG_LEVELS.INFO, `📁 Default team: ${HEROKU_TEAM}`);
-    log(LOG_LEVELS.INFO, `💰 Deployment cost: KSH ${DEPLOYMENT_COST}`);
-    log(LOG_LEVELS.INFO, `📊 MongoDB: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected'}`);
-    log(LOG_LEVELS.INFO, `🌐 App URL: ${APP_URL}`);
+    console.log(`🔥 CyberDark Host running on port ${PORT}`);
+    console.log(`📁 Default team: ${HEROKU_TEAM}`);
+    console.log(`💰 Deployment cost: KSH ${DEPLOYMENT_COST}`);
+    console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected'}`);
+    console.log(`🌐 App URL: ${APP_URL}`);
 });
