@@ -3,16 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deposit - HerokuDeployer</title>
+    <title>Deposit - CyberDark Host</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .brand-text {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .balance-amount-large {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .quick-amount:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: #8b5cf6;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <span class="brand-icon">🚀</span>
-                <span class="brand-text">HerokuDeployer</span>
+                <span class="brand-icon">🔥</span>
+                <span class="brand-text">CyberDark Host</span>
             </div>
             <div class="nav-links">
                 <a href="/">Home</a>
@@ -30,24 +55,25 @@
                 <div class="balance-card">
                     <div class="balance-card-content" style="padding: 10px 0;">
                         <span class="balance-label">Current Balance</span>
-                        <span class="balance-amount-large" id="currentBalance">₦0.00</span>
+                        <span class="balance-amount-large" id="currentBalance">KSH 0.00</span>
                     </div>
                 </div>
 
                 <div class="deploy-container" style="max-width: 500px; margin: 0 auto;">
                     <form id="depositForm" class="deploy-form">
                         <div class="form-group">
-                            <label for="depositAmount">Amount (NGN)</label>
+                            <label for="depositAmount">Amount (KSH)</label>
                             <input type="number" id="depositAmount" placeholder="Enter amount" min="100" required>
-                            <small>Minimum deposit: ₦100</small>
+                            <small>Minimum deposit: KSH 100</small>
                         </div>
 
                         <div class="quick-amounts" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;">
-                            <button type="button" class="quick-amount" onclick="setAmount(500)">₦500</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(1000)">₦1,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(2000)">₦2,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(5000)">₦5,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(10000)">₦10,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(100)">KSH 100</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(500)">KSH 500</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(1000)">KSH 1,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(2000)">KSH 2,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(5000)">KSH 5,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(10000)">KSH 10,000</button>
                         </div>
 
                         <button type="submit" class="btn-primary btn-block" id="depositBtn">
@@ -65,26 +91,29 @@
         </section>
 
         <footer class="footer">
-            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
         </footer>
     </div>
 
+    <script src="script.js"></script>
     <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const currentUser = getCurrentUser();
         
-        if (!currentUser.email) {
+        if (!isLoggedIn()) {
             window.location.href = '/login.html';
         }
 
         document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
 
-        // Load balance
+        function formatKSH(amount) {
+            return `KSH ${Number(amount).toLocaleString()}`;
+        }
+
         async function loadBalance() {
             try {
-                const response = await fetch(`/api/wallet/${currentUser.email}`);
-                const data = await response.json();
+                const data = await fetchWalletBalance(currentUser.email);
                 if (data.success) {
-                    document.getElementById('currentBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
+                    document.getElementById('currentBalance').textContent = formatKSH(data.walletBalance);
                 }
             } catch (error) {
                 console.error('Error loading balance:', error);
@@ -103,7 +132,7 @@
             const resultDiv = document.getElementById('depositResult');
 
             if (!amount || amount < 100) {
-                showResult('Please enter a valid amount (min: ₦100)', 'error');
+                showResult('Please enter a valid amount (min: KSH 100)', 'error');
                 return;
             }
 
