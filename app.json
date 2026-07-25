@@ -1,1 +1,33 @@
-HRK-AAi5tgVIVs29Bi9M3sNPurSKlcCQPoS8GQwmoc-fz_OQ_____w3wNOgzyVsi
+{
+  "name": "Heroku Deployer",
+  "description": "A simple app to deploy KAMRAN-MD bot to Heroku with session management",
+  "repository": "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME",
+  "keywords": ["heroku", "deployer", "bot", "whatsapp", "session"],
+  "env": {
+    "HEROKU_API_KEY": {
+      "description": "Your Heroku API key for deploying apps",
+      "required": true
+    },
+    "PORT": {
+      "description": "Port for the web server",
+      "value": "3000",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "npm install"
+  },
+  "success_url": "/"
+}
