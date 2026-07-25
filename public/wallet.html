@@ -3,17 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wallet - HerokuDeployer</title>
+    <title>Wallet - CyberDark Host</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .brand-text {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .balance-amount-large {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .quick-amount:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: #8b5cf6;
+        }
+        .deployment-details a {
+            color: #8b5cf6;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Navbar -->
         <nav class="navbar">
             <div class="nav-brand">
-                <span class="brand-icon">🚀</span>
-                <span class="brand-text">HerokuDeployer</span>
+                <span class="brand-icon">🔥</span>
+                <span class="brand-text">CyberDark Host</span>
             </div>
             <div class="nav-links">
                 <a href="/">Home</a>
@@ -52,7 +80,7 @@
                     <div class="balance-actions">
                         <button class="btn-primary" onclick="openDepositModal()">💰 Deposit Funds</button>
                         <button class="btn-secondary" onclick="refreshWallet()">🔄 Refresh</button>
-                        <a href="/deploy.html" class="btn-secondary">🚀 Deploy App</a>
+                        <a href="/deploy.html" class="btn-secondary">🔥 Deploy App</a>
                     </div>
                 </div>
 
@@ -95,7 +123,7 @@
 
                 <!-- Deployments -->
                 <div class="deployments-section">
-                    <h3>🚀 Your Deployments</h3>
+                    <h3>🔥 Your Deployments</h3>
                     <div id="deploymentsList" class="deployments-list">
                         <div class="loading">⏳ Loading deployments...</div>
                     </div>
@@ -105,30 +133,25 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
         </footer>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // Get current user from shared script
         const currentUser = getCurrentUser();
 
-        // Redirect if not logged in
         if (!isLoggedIn()) {
             window.location.href = '/login.html';
         }
 
-        // Update nav
         document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
         document.querySelector('.btn-login').href = '/wallet.html';
 
-        // Format currency helper
         function formatKSH(amount) {
             return `KSH ${Number(amount).toLocaleString()}`;
         }
 
-        // Load wallet data
         async function loadWalletData() {
             try {
                 const data = await fetchWalletBalance(currentUser.email);
@@ -144,7 +167,6 @@
             }
         }
 
-        // Load transactions
         async function loadTransactions() {
             try {
                 const response = await fetch(`/api/transactions/${currentUser.email}`);
@@ -174,7 +196,6 @@
             }
         }
 
-        // Load deployments
         async function loadDeployments() {
             try {
                 const data = await fetchUserDeployments(currentUser.email);
@@ -196,7 +217,7 @@
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = '<div class="empty-state">🚀 No deployments yet. <a href="/deploy.html" style="color:#6366f1;">Deploy now!</a></div>';
+                    list.innerHTML = '<div class="empty-state">🚀 No deployments yet. <a href="/deploy.html" style="color:#8b5cf6;">Deploy now!</a></div>';
                 }
             } catch (error) {
                 console.error('Error loading deployments:', error);
@@ -204,7 +225,6 @@
             }
         }
 
-        // Deposit functions
         function openDepositModal() {
             document.getElementById('depositModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
@@ -213,7 +233,6 @@
         function closeDepositModal() {
             document.getElementById('depositModal').style.display = 'none';
             document.body.style.overflow = 'auto';
-            // Reset message
             const msgDiv = document.getElementById('depositMessage');
             msgDiv.style.display = 'none';
             msgDiv.textContent = '';
@@ -221,12 +240,6 @@
 
         function setAmount(amount) {
             document.getElementById('depositAmount').value = amount;
-            // Highlight selected amount
-            document.querySelectorAll('.quick-amount').forEach(btn => {
-                btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                btn.style.background = 'rgba(255, 255, 255, 0.05)';
-            });
-            // Could add highlight logic here
         }
 
         async function initializeDeposit() {
@@ -241,7 +254,6 @@
                 return;
             }
 
-            // Disable button
             depositBtn.disabled = true;
             depositBtn.textContent = '⏳ Processing...';
 
@@ -292,7 +304,6 @@
             }, 1000);
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('depositModal');
             if (event.target === modal) {
@@ -300,27 +311,23 @@
             }
         };
 
-        // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeDepositModal();
             }
         });
 
-        // Load all data
         document.addEventListener('DOMContentLoaded', function() {
             loadWalletData();
             loadTransactions();
             loadDeployments();
         });
 
-        // Auto-refresh every 30 seconds
         let refreshInterval = setInterval(() => {
-            if (document.hidden) return; // Don't refresh if tab is hidden
+            if (document.hidden) return;
             loadWalletData();
         }, 30000);
 
-        // Stop auto-refresh when page is unloaded
         window.addEventListener('beforeunload', function() {
             clearInterval(refreshInterval);
         });
