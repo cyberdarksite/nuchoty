@@ -26,22 +26,22 @@
         <!-- Wallet Section -->
         <section class="wallet-section">
             <div class="wallet-container">
-                <h1>Your Wallet</h1>
+                <h1>💰 Your Wallet</h1>
                 <p class="subtitle">Manage your balance and transactions</p>
 
                 <!-- Balance Card -->
                 <div class="balance-card">
                     <div class="balance-card-content">
                         <span class="balance-label">💰 Available Balance</span>
-                        <span class="balance-amount-large" id="walletBalance">₦0.00</span>
+                        <span class="balance-amount-large" id="walletBalance">KSH 0.00</span>
                         <div class="balance-stats">
                             <div class="stat">
                                 <span>Total Deposits</span>
-                                <span id="totalDeposits">₦0.00</span>
+                                <span id="totalDeposits">KSH 0.00</span>
                             </div>
                             <div class="stat">
                                 <span>Total Spent</span>
-                                <span id="totalSpent">₦0.00</span>
+                                <span id="totalSpent">KSH 0.00</span>
                             </div>
                             <div class="stat">
                                 <span>Deployments</span>
@@ -52,6 +52,7 @@
                     <div class="balance-actions">
                         <button class="btn-primary" onclick="openDepositModal()">💰 Deposit Funds</button>
                         <button class="btn-secondary" onclick="refreshWallet()">🔄 Refresh</button>
+                        <a href="/deploy.html" class="btn-secondary">🚀 Deploy App</a>
                     </div>
                 </div>
 
@@ -59,36 +60,44 @@
                 <div id="depositModal" class="modal">
                     <div class="modal-content">
                         <span class="close" onclick="closeDepositModal()">&times;</span>
-                        <h2>Deposit Funds</h2>
-                        <p>Add money to your wallet using Paystack</p>
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <span style="font-size: 48px;">💳</span>
+                            <h2 style="margin-top: 8px;">Deposit Funds</h2>
+                            <p style="color: #a1a1aa;">Add money to your wallet using Paystack</p>
+                        </div>
                         <div class="form-group">
-                            <label for="depositAmount">Amount (NGN)</label>
-                            <input type="number" id="depositAmount" placeholder="Enter amount (min: ₦100)" min="100">
+                            <label for="depositAmount">Amount (KSH)</label>
+                            <input type="number" id="depositAmount" placeholder="Enter amount (min: KSH 100)" min="100">
+                            <small>Minimum deposit: KSH 100</small>
                         </div>
                         <div class="quick-amounts">
-                            <button class="quick-amount" onclick="setAmount(500)">₦500</button>
-                            <button class="quick-amount" onclick="setAmount(1000)">₦1,000</button>
-                            <button class="quick-amount" onclick="setAmount(2000)">₦2,000</button>
-                            <button class="quick-amount" onclick="setAmount(5000)">₦5,000</button>
+                            <button class="quick-amount" onclick="setAmount(100)">KSH 100</button>
+                            <button class="quick-amount" onclick="setAmount(500)">KSH 500</button>
+                            <button class="quick-amount" onclick="setAmount(1000)">KSH 1,000</button>
+                            <button class="quick-amount" onclick="setAmount(2000)">KSH 2,000</button>
+                            <button class="quick-amount" onclick="setAmount(5000)">KSH 5,000</button>
+                            <button class="quick-amount" onclick="setAmount(10000)">KSH 10,000</button>
                         </div>
-                        <button class="btn-primary btn-block" onclick="initializeDeposit()">💳 Pay Now</button>
+                        <button class="btn-primary btn-block" onclick="initializeDeposit()" id="depositBtn">
+                            💳 Pay with Paystack
+                        </button>
                         <div id="depositMessage" class="message"></div>
                     </div>
                 </div>
 
                 <!-- Transactions -->
                 <div class="transactions-section">
-                    <h3>Transaction History</h3>
+                    <h3>📊 Transaction History</h3>
                     <div id="transactionsList" class="transactions-list">
-                        <div class="loading">Loading transactions...</div>
+                        <div class="loading">⏳ Loading transactions...</div>
                     </div>
                 </div>
 
                 <!-- Deployments -->
                 <div class="deployments-section">
-                    <h3>Your Deployments</h3>
+                    <h3>🚀 Your Deployments</h3>
                     <div id="deploymentsList" class="deployments-list">
-                        <div class="loading">Loading deployments...</div>
+                        <div class="loading">⏳ Loading deployments...</div>
                     </div>
                 </div>
             </div>
@@ -100,10 +109,13 @@
         </footer>
     </div>
 
+    <script src="script.js"></script>
     <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        
-        if (!currentUser.email) {
+        // Get current user from shared script
+        const currentUser = getCurrentUser();
+
+        // Redirect if not logged in
+        if (!isLoggedIn()) {
             window.location.href = '/login.html';
         }
 
@@ -111,20 +123,24 @@
         document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
         document.querySelector('.btn-login').href = '/wallet.html';
 
+        // Format currency helper
+        function formatKSH(amount) {
+            return `KSH ${Number(amount).toLocaleString()}`;
+        }
+
         // Load wallet data
         async function loadWalletData() {
             try {
-                const response = await fetch(`/api/wallet/${currentUser.email}`);
-                const data = await response.json();
-                
+                const data = await fetchWalletBalance(currentUser.email);
                 if (data.success) {
-                    document.getElementById('walletBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
-                    document.getElementById('totalDeposits').textContent = `₦${data.totalDeposits.toLocaleString()}`;
-                    document.getElementById('totalSpent').textContent = `₦${data.totalSpent.toLocaleString()}`;
+                    document.getElementById('walletBalance').textContent = formatKSH(data.walletBalance);
+                    document.getElementById('totalDeposits').textContent = formatKSH(data.totalDeposits);
+                    document.getElementById('totalSpent').textContent = formatKSH(data.totalSpent);
                     document.getElementById('deploymentCount').textContent = data.deploymentCount || 0;
                 }
             } catch (error) {
                 console.error('Error loading wallet:', error);
+                showToast('Failed to load wallet data', 'error');
             }
         }
 
@@ -133,9 +149,8 @@
             try {
                 const response = await fetch(`/api/transactions/${currentUser.email}`);
                 const data = await response.json();
-                
                 const list = document.getElementById('transactionsList');
-                
+
                 if (data.success && data.transactions.length > 0) {
                     list.innerHTML = data.transactions.map(t => `
                         <div class="transaction-item ${t.type}">
@@ -143,76 +158,94 @@
                             <div class="transaction-details">
                                 <span class="transaction-type">${t.type === 'deposit' ? 'Deposit' : 'Deployment'}</span>
                                 <span class="transaction-desc">${t.description}</span>
-                                <span class="transaction-date">${new Date(t.date).toLocaleDateString()}</span>
+                                <span class="transaction-date">${new Date(t.date).toLocaleDateString()} ${new Date(t.date).toLocaleTimeString()}</span>
                             </div>
                             <span class="transaction-amount ${t.type === 'deposit' ? 'positive' : 'negative'}">
-                                ${t.type === 'deposit' ? '+' : '-'}₦${t.amount.toLocaleString()}
+                                ${t.type === 'deposit' ? '+' : '-'}${formatKSH(t.amount)}
                             </span>
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = '<div class="empty-state">No transactions yet</div>';
+                    list.innerHTML = '<div class="empty-state">📭 No transactions yet</div>';
                 }
             } catch (error) {
                 console.error('Error loading transactions:', error);
+                document.getElementById('transactionsList').innerHTML = '<div class="empty-state">❌ Failed to load transactions</div>';
             }
         }
 
         // Load deployments
         async function loadDeployments() {
             try {
-                const response = await fetch(`/api/deployments/${currentUser.email}`);
-                const data = await response.json();
-                
+                const data = await fetchUserDeployments(currentUser.email);
                 const list = document.getElementById('deploymentsList');
-                
+
                 if (data.success && data.deployments.length > 0) {
                     list.innerHTML = data.deployments.map(d => `
                         <div class="deployment-item">
                             <div class="deployment-info">
-                                <span class="deployment-name">${d.appName}</span>
+                                <span class="deployment-name">📱 ${d.appName}</span>
                                 <span class="deployment-status status-${d.deploymentStatus}">${d.deploymentStatus}</span>
                             </div>
                             <div class="deployment-details">
-                                <span>💰 ₦${d.amountPaid.toLocaleString()}</span>
+                                <span>💰 ${formatKSH(d.amountPaid || 0)}</span>
                                 <span>📅 ${new Date(d.createdAt).toLocaleDateString()}</span>
-                                ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View</a>` : ''}
+                                ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View App</a>` : ''}
+                                ${d.id ? `<a href="/logs/${d.id}" target="_blank">📋 Logs</a>` : ''}
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = '<div class="empty-state">No deployments yet</div>';
+                    list.innerHTML = '<div class="empty-state">🚀 No deployments yet. <a href="/deploy.html" style="color:#6366f1;">Deploy now!</a></div>';
                 }
             } catch (error) {
                 console.error('Error loading deployments:', error);
+                document.getElementById('deploymentsList').innerHTML = '<div class="empty-state">❌ Failed to load deployments</div>';
             }
         }
 
         // Deposit functions
         function openDepositModal() {
             document.getElementById('depositModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
         function closeDepositModal() {
             document.getElementById('depositModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            // Reset message
+            const msgDiv = document.getElementById('depositMessage');
+            msgDiv.style.display = 'none';
+            msgDiv.textContent = '';
         }
 
         function setAmount(amount) {
             document.getElementById('depositAmount').value = amount;
+            // Highlight selected amount
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                btn.style.background = 'rgba(255, 255, 255, 0.05)';
+            });
+            // Could add highlight logic here
         }
 
         async function initializeDeposit() {
             const amount = parseInt(document.getElementById('depositAmount').value);
             const messageDiv = document.getElementById('depositMessage');
+            const depositBtn = document.getElementById('depositBtn');
 
             if (!amount || amount < 100) {
-                messageDiv.textContent = 'Please enter a valid amount (min: ₦100)';
+                messageDiv.textContent = '⚠️ Please enter a valid amount (min: KSH 100)';
                 messageDiv.className = 'message error';
                 messageDiv.style.display = 'block';
                 return;
             }
 
-            messageDiv.textContent = 'Processing...';
+            // Disable button
+            depositBtn.disabled = true;
+            depositBtn.textContent = '⏳ Processing...';
+
+            messageDiv.textContent = '⏳ Initializing payment...';
             messageDiv.className = 'message info';
             messageDiv.style.display = 'block';
 
@@ -230,37 +263,33 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    messageDiv.textContent = 'Redirecting to payment...';
+                    messageDiv.textContent = '✅ Redirecting to Paystack...';
                     messageDiv.className = 'message success';
-                    
-                    // Redirect to Paystack
-                    window.location.href = data.authorization_url;
+                    setTimeout(() => {
+                        window.location.href = data.authorization_url;
+                    }, 1500);
                 } else {
                     messageDiv.textContent = data.error || 'Payment initialization failed';
                     messageDiv.className = 'message error';
+                    depositBtn.disabled = false;
+                    depositBtn.textContent = '💳 Pay with Paystack';
                 }
             } catch (error) {
-                messageDiv.textContent = `Error: ${error.message}`;
+                messageDiv.textContent = `❌ Error: ${error.message}`;
                 messageDiv.className = 'message error';
+                depositBtn.disabled = false;
+                depositBtn.textContent = '💳 Pay with Paystack';
             }
         }
 
         function refreshWallet() {
+            showToast('🔄 Refreshing wallet...', 'info');
             loadWalletData();
             loadTransactions();
             loadDeployments();
-            showTemporaryMessage('Refreshed successfully!', 'success');
-        }
-
-        function showTemporaryMessage(message, type) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${type}`;
-            msgDiv.textContent = message;
-            document.querySelector('.wallet-container').prepend(msgDiv);
-            
             setTimeout(() => {
-                msgDiv.remove();
-            }, 3000);
+                showToast('✅ Wallet refreshed successfully!', 'success');
+            }, 1000);
         }
 
         // Close modal when clicking outside
@@ -271,10 +300,30 @@
             }
         };
 
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDepositModal();
+            }
+        });
+
         // Load all data
-        loadWalletData();
-        loadTransactions();
-        loadDeployments();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWalletData();
+            loadTransactions();
+            loadDeployments();
+        });
+
+        // Auto-refresh every 30 seconds
+        let refreshInterval = setInterval(() => {
+            if (document.hidden) return; // Don't refresh if tab is hidden
+            loadWalletData();
+        }, 30000);
+
+        // Stop auto-refresh when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            clearInterval(refreshInterval);
+        });
     </script>
 </body>
 </html>
