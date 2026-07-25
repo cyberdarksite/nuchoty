@@ -1,29 +1,39 @@
 require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const Heroku = require('heroku');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
 const GITHUB_REPO_TARBALL = 'https://github.com/KAMRAN-SMD/KAMRAN-MD/tarball/main';
 
+// Initialize Heroku client
+const heroku = new Heroku({ token: HEROKU_API_KEY });
+
 app.use(express.static('public'));
 app.use(express.json());
 
-// Heroku API configuration
-const herokuHeaders = {
-    'Authorization': `Bearer ${HEROKU_API_KEY}`,
-    'Accept': 'application/vnd.heroku+json; version=3',
-    'Content-Type': 'application/json'
-};
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.post('/deploy', async (req, res) => {
     const { sessionId, appName } = req.body;
 
     if (!sessionId) {
-        return res.status(400).json({ error: 'SESSION_ID is required' });
+        return res.status(400).json({ 
+            success: false,
+            error: 'SESSION_ID is required' 
+        });
+    }
+
+    if (!HEROKU_API_KEY) {
+        return res.status(400).json({
+            success: false,
+            error: 'HEROKU_API_KEY is not configured'
+        });
     }
 
     const generatedAppName = appName?.trim()
@@ -31,74 +41,71 @@ app.post('/deploy', async (req, res) => {
         : `subzero-${uuidv4().slice(0, 6)}`;
 
     try {
-        // Step 1: Create Heroku app WITHOUT organization parameter
-        // The API key's scope determines which team it creates apps under
-        const createAppRes = await axios.post(
-            'https://api.heroku.com/apps', 
-            { 
-                name: generatedAppName
-                // Don't include organization or team parameter
-            }, 
-            { headers: herokuHeaders }
-        );
+        // Step 1: Create Heroku app under iamricky team
+        console.log(`Creating app: ${generatedAppName} under iamricky team`);
+        
+        const createApp = await heroku.post('/apps', {
+            name: generatedAppName,
+            organization: 'iamricky'
+        });
 
-        console.log('App created:', createAppRes.data.id);
+        console.log('App created:', createApp.id);
 
-        // Step 2: Transfer app to iamricky team (if needed)
-        try {
-            await axios.patch(
-                `https://api.heroku.com/apps/${generatedAppName}`,
-                { 
-                    organization: 'iamricky' 
-                },
-                { headers: herokuHeaders }
-            );
-            console.log('App transferred to iamricky team');
-        } catch (transferError) {
-            console.log('App already in correct team or transfer not needed');
-        }
-
-        // Step 3: Set config vars
-        await axios.patch(
-            `https://api.heroku.com/apps/${generatedAppName}/config-vars`,
-            { SESSION_ID: sessionId },
-            { headers: herokuHeaders }
-        );
+        // Step 2: Set config vars
+        await heroku.patch(`/apps/${generatedAppName}/config-vars`, {
+            body: { 
+                SESSION_ID: sessionId,
+                HEROKU_API_KEY: HEROKU_API_KEY
+            }
+        });
 
         console.log('Config vars set');
 
-        // Step 4: Trigger build
-        await axios.post(
-            `https://api.heroku.com/apps/${generatedAppName}/builds`,
-            { source_blob: { url: GITHUB_REPO_TARBALL } },
-            { headers: herokuHeaders }
-        );
+        // Step 3: Trigger build from GitHub tarball
+        await heroku.post(`/apps/${generatedAppName}/builds`, {
+            body: { 
+                source_blob: { 
+                    url: GITHUB_REPO_TARBALL 
+                } 
+            }
+        });
 
         console.log('Build triggered');
 
         res.json({ 
             success: true,
-            message: 'Heroku deployment started!', 
+            message: 'Heroku deployment started successfully!',
             appName: generatedAppName,
             appUrl: `https://${generatedAppName}.herokuapp.com`,
-            dashboardUrl: `https://dashboard.heroku.com/teams/iamricky/apps/${generatedAppName}`
+            dashboardUrl: `https://dashboard.heroku.com/teams/iamricky/apps/${generatedAppName}`,
+            buildLogs: `https://dashboard.heroku.com/teams/iamricky/apps/${generatedAppName}/activity`
         });
 
     } catch (error) {
-        console.error('Deployment error:', error.response?.data || error.message);
+        console.error('Deployment error:', error.body || error.message);
         
-        const errorDetails = error.response?.data || error.message;
-        const statusCode = error.response?.status || 500;
-        
-        res.status(statusCode).json({
+        // Handle verification required error
+        if (error.body && error.body.id === 'verification_required') {
+            return res.status(422).json({
+                success: false,
+                error: 'Team verification required',
+                message: 'The iamricky team needs to be verified with payment information',
+                verifyUrl: 'https://dashboard.heroku.com/teams/iamricky/settings',
+                details: error.body
+            });
+        }
+
+        // Handle other errors
+        res.status(500).json({
+            success: false,
             error: 'Heroku deployment failed',
-            details: errorDetails,
-            statusCode: statusCode
+            details: error.body || error.message
         });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Heroku Deployer running on port ${PORT}`);
-    console.log(`Using API key with team access: iamricky`);
+    console.log(`Deploying to team: iamricky`);
+    console.log(`API Key configured: ${HEROKU_API_KEY ? 'Yes' : 'No'}`);
 });
