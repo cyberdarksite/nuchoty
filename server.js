@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
+const HEROKU_TEAM = 'iamricky'; // Using iamricky team
 const GITHUB_REPO_TARBALL = 'https://github.com/KAMRAN-SMD/KAMRAN-MD/tarball/main';
 
 app.use(express.static('public'));
@@ -31,10 +32,13 @@ app.post('/deploy', async (req, res) => {
         : `subzero-${uuidv4().slice(0, 6)}`;
 
     try {
-        // Step 1: Create Heroku app
+        // Step 1: Create Heroku app under iamricky team
         const createAppRes = await axios.post(
             'https://api.heroku.com/apps', 
-            { name: generatedAppName }, 
+            { 
+                name: generatedAppName,
+                team: 'iamricky'  // Specify the team
+            }, 
             { headers: herokuHeaders }
         );
 
@@ -55,7 +59,7 @@ app.post('/deploy', async (req, res) => {
         res.json({ 
             message: 'Heroku deployment started!', 
             appUrl: `https://${generatedAppName}.herokuapp.com`,
-            dashboardUrl: 'https://dashboard.heroku.com/apps'
+            dashboardUrl: 'https://dashboard.heroku.com/teams/iamricky/apps'
         });
 
     } catch (error) {
@@ -69,4 +73,5 @@ app.post('/deploy', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Heroku Deployer running on port ${PORT}`);
+    console.log(`Deploying to team: iamricky`);
 });
