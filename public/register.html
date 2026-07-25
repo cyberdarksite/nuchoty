@@ -3,17 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - HerokuDeployer</title>
+    <title>Register - CyberDark Host</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .brand-text {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+        .auth-links a {
+            color: #8b5cf6;
+        }
+    </style>
 </head>
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <span class="auth-icon">🚀</span>
-                <h2>Create Account</h2>
-                <p>Start deploying apps with Paystack</p>
+                <span class="auth-icon">🔥</span>
+                <h2 style="background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CyberDark Host</h2>
+                <p>Create your account and start deploying</p>
             </div>
 
             <form id="registerForm" class="auth-form">
@@ -58,7 +74,6 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // Validation
             if (!fullName || !email || !password || !confirmPassword) {
                 showMessage('Please fill in all fields', 'error');
                 return;
@@ -74,14 +89,12 @@
                 return;
             }
 
-            // Check if user already exists
             const users = JSON.parse(localStorage.getItem('users') || '[]');
             if (users.find(u => u.email === email)) {
                 showMessage('User with this email already exists', 'error');
                 return;
             }
 
-            // Save user
             const newUser = {
                 fullName,
                 email,
@@ -94,7 +107,7 @@
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('currentUser', JSON.stringify(newUser));
 
-            showMessage('Account created successfully! Redirecting...', 'success');
+            showMessage('✅ Account created successfully! Redirecting...', 'success');
             setTimeout(() => {
                 window.location.href = '/deploy.html';
             }, 1000);
