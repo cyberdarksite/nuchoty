@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit - HerokuDeployer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🚀</span>
+                <span class="brand-text">HerokuDeployer</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/deploy.html">Deploy</a>
+                <a href="/wallet.html" class="active">Wallet</a>
+                <a href="/login.html" class="btn-login">Login</a>
+            </div>
+        </nav>
+
+        <section class="wallet-section">
+            <div class="wallet-container">
+                <h1>💳 Deposit Funds</h1>
+                <p class="subtitle">Add money to your wallet using Paystack</p>
+
+                <div class="balance-card">
+                    <div class="balance-card-content" style="padding: 10px 0;">
+                        <span class="balance-label">Current Balance</span>
+                        <span class="balance-amount-large" id="currentBalance">₦0.00</span>
+                    </div>
+                </div>
+
+                <div class="deploy-container" style="max-width: 500px; margin: 0 auto;">
+                    <form id="depositForm" class="deploy-form">
+                        <div class="form-group">
+                            <label for="depositAmount">Amount (NGN)</label>
+                            <input type="number" id="depositAmount" placeholder="Enter amount" min="100" required>
+                            <small>Minimum deposit: ₦100</small>
+                        </div>
+
+                        <div class="quick-amounts" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;">
+                            <button type="button" class="quick-amount" onclick="setAmount(500)">₦500</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(1000)">₦1,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(2000)">₦2,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(5000)">₦5,000</button>
+                            <button type="button" class="quick-amount" onclick="setAmount(10000)">₦10,000</button>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block" id="depositBtn">
+                            💳 Pay with Paystack
+                        </button>
+                    </form>
+
+                    <div id="depositResult" class="deployment-result"></div>
+
+                    <div style="margin-top: 24px; text-align: center;">
+                        <a href="/wallet.html" class="btn-secondary">← Back to Wallet</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+        </footer>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        
+        if (!currentUser.email) {
+            window.location.href = '/login.html';
+        }
+
+        document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
+
+        // Load balance
+        async function loadBalance() {
+            try {
+                const response = await fetch(`/api/wallet/${currentUser.email}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('currentBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
+                }
+            } catch (error) {
+                console.error('Error loading balance:', error);
+            }
+        }
+
+        function setAmount(amount) {
+            document.getElementById('depositAmount').value = amount;
+        }
+
+        document.getElementById('depositForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const amount = parseInt(document.getElementById('depositAmount').value);
+            const depositBtn = document.getElementById('depositBtn');
+            const resultDiv = document.getElementById('depositResult');
+
+            if (!amount || amount < 100) {
+                showResult('Please enter a valid amount (min: ₦100)', 'error');
+                return;
+            }
+
+            depositBtn.disabled = true;
+            depositBtn.textContent = '⏳ Processing...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/deposit/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        amount: amount,
+                        userId: currentUser.email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('✅ Redirecting to Paystack...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.authorization_url;
+                    }, 1500);
+                } else {
+                    showResult(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                depositBtn.disabled = false;
+                depositBtn.textContent = '💳 Pay with Paystack';
+            }
+        });
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('depositResult');
+            resultDiv.className = `deployment-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        loadBalance();
+    </script>
+</body>
+</html>
