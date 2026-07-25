@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heroku Deployer on Render</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 KAMRAN-MD Heroku Deployer</h1>
+        <div class="form-group">
+            <label for="sessionId">SESSION_ID:</label>
+            <input type="text" id="sessionId" placeholder="Enter your session ID" required>
+        </div>
+        <div class="form-group">
+            <label for="appName">App Name (optional):</label>
+            <input type="text" id="appName" placeholder="Leave blank for random name">
+        </div>
+        <button id="deployBtn">Deploy to Heroku</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Deploying to Heroku, please wait...</p>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('deployBtn').addEventListener('click', async function() {
+            const sessionId = document.getElementById('sessionId').value.trim();
+            const appName = document.getElementById('appName').value.trim();
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!sessionId) {
+                showError('SESSION_ID is required');
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/deploy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        appName: appName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || 'Heroku deployment failed');
+                
+                showSuccess(`
+                    <p>✅ Heroku deployment started!</p>
+                    <p>Your app will be available at:</p>
+                    <p class="app-url">${data.appUrl}</p>
+                    <p>Note: First deployment may take 5-10 minutes.</p>
+                    <p>Check progress at: <a href="${data.dashboardUrl}" target="_blank">Heroku Dashboard</a></p>
+                `);
+            } catch (error) {
+                showError(error.message);
+            }
+            
+            function showSuccess(message) {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = message;
+            }
+            
+            function showError(message) {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <p>❌ Deployment failed!</p>
+                    <p>${message}</p>
+                    <p>Troubleshooting:</p>
+                    <ul>
+                        <li>Ensure your SESSION_ID is correct</li>
+                        <li>Check if your Heroku account has available dyno hours</li>
+                        <li>Try a different app name</li>
+                    </ul>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
