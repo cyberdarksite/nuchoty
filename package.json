@@ -1,6 +1,7 @@
 {
   "name": "heroku-deployer-on-render",
   "version": "2.0.0",
+  "type": "module",
   "description": "Heroku deployment interface with Paystack payments and MongoDB - hosted on Render",
   "main": "server.js",
   "scripts": {
@@ -23,24 +24,5 @@
   "engines": {
     "node": "18.x",
     "npm": "9.x"
-  },
-  "keywords": [
-    "heroku",
-    "deployer",
-    "paystack",
-    "payment",
-    "whatsapp",
-    "bot",
-    "deployment"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/heroku-deployer"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/heroku-deployer/issues"
-  },
-  "homepage": "https://github.com/yourusername/heroku-deployer#readme"
+  }
 }
