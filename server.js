@@ -7,7 +7,6 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
-const HEROKU_TEAM = 'iamricky'; // Using iamricky team
 const GITHUB_REPO_TARBALL = 'https://github.com/KAMRAN-SMD/KAMRAN-MD/tarball/main';
 
 app.use(express.static('public'));
@@ -37,10 +36,12 @@ app.post('/deploy', async (req, res) => {
             'https://api.heroku.com/apps', 
             { 
                 name: generatedAppName,
-                organization: 'iamricky'  // Changed from 'team' to 'organization'
+                organization: 'iamricky'  // Using organization for team deployment
             }, 
             { headers: herokuHeaders }
         );
+
+        console.log('App created:', createAppRes.data);
 
         // Step 2: Set config vars
         await axios.patch(
@@ -49,6 +50,8 @@ app.post('/deploy', async (req, res) => {
             { headers: herokuHeaders }
         );
 
+        console.log('Config vars set');
+
         // Step 3: Trigger build
         await axios.post(
             `https://api.heroku.com/apps/${generatedAppName}/builds`,
@@ -56,17 +59,27 @@ app.post('/deploy', async (req, res) => {
             { headers: herokuHeaders }
         );
 
+        console.log('Build triggered');
+
         res.json({ 
+            success: true,
             message: 'Heroku deployment started!', 
+            appName: generatedAppName,
             appUrl: `https://${generatedAppName}.herokuapp.com`,
-            dashboardUrl: 'https://dashboard.heroku.com/teams/iamricky/apps'
+            dashboardUrl: `https://dashboard.heroku.com/teams/iamricky/apps/${generatedAppName}`
         });
 
     } catch (error) {
         console.error('Deployment error:', error.response?.data || error.message);
-        res.status(500).json({
+        
+        // More detailed error response
+        const errorDetails = error.response?.data || error.message;
+        const statusCode = error.response?.status || 500;
+        
+        res.status(statusCode).json({
             error: 'Heroku deployment failed',
-            details: error.response?.data || error.message
+            details: errorDetails,
+            statusCode: statusCode
         });
     }
 });
