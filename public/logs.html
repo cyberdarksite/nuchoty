@@ -4,48 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deployment Logs - CyberDark Host</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            background: #08090d;
+            color: #ecedf0;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ecedf0;
+        }
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+        }
         .brand-text {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-login {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-        }
-        .logs-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+        .back-link { color: #6b7280; text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #8b5cf6; }
+
         .log-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
+            gap: 12px;
         }
-        .log-header h1 {
-            font-size: 28px;
-        }
+        .log-header h1 { font-size: 24px; font-weight: 700; }
         .log-status {
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
         }
-        .status-pending { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .status-building { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
-        .status-deployed { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .status-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .status-pending { background: rgba(245,158,11,0.1); color: #fbbf24; }
+        .status-building { background: rgba(139,92,246,0.1); color: #a78bfa; }
+        .status-deployed { background: rgba(16,185,129,0.1); color: #4ade80; }
+        .status-failed { background: rgba(239,68,68,0.1); color: #f87171; }
 
         .log-list {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: #0f1117;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
             padding: 16px;
             max-height: 600px;
             overflow-y: auto;
@@ -54,25 +87,22 @@
         }
         .log-entry {
             padding: 6px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
             display: flex;
             gap: 12px;
             align-items: flex-start;
         }
         .log-entry .time {
-            color: #52525b;
+            color: #6b7280;
             min-width: 140px;
             font-size: 12px;
+            flex-shrink: 0;
         }
-        .log-entry .message {
-            flex: 1;
-            word-break: break-word;
-        }
-        .log-entry .type-info { color: #818cf8; }
+        .log-entry .message { flex: 1; word-break: break-word; }
+        .log-entry .type-info { color: #a78bfa; }
         .log-entry .type-success { color: #4ade80; }
         .log-entry .type-error { color: #f87171; }
         .log-entry .type-warning { color: #fbbf24; }
-
         .log-entry .badge {
             padding: 2px 8px;
             border-radius: 4px;
@@ -81,117 +111,139 @@
             text-transform: uppercase;
             margin-right: 6px;
         }
-        .badge-info { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
-        .badge-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .badge-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .badge-info { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .badge-success { background: rgba(16,185,129,0.2); color: #4ade80; }
+        .badge-error { background: rgba(239,68,68,0.2); color: #f87171; }
+        .badge-warning { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+        .empty-logs {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-size: 14px;
+        }
+        .empty-logs i { font-size: 32px; display: block; margin-bottom: 12px; }
 
         .auto-refresh {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin-top: 16px;
         }
-        .auto-refresh label {
-            color: #a1a1aa;
-            font-size: 14px;
-        }
+        .auto-refresh label { color: #6b7280; font-size: 13px; }
         .auto-refresh input[type="checkbox"] {
             width: 18px;
             height: 18px;
             accent-color: #8b5cf6;
         }
 
-        .back-btn {
-            margin-top: 20px;
-            display: inline-block;
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .15s ease;
+            font-family: inherit;
+            text-decoration: none;
         }
+        .btn-ghost {
+            background: rgba(255,255,255,0.05);
+            color: #ecedf0;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
 
-        .empty-logs {
-            text-align: center;
-            color: #52525b;
-            padding: 40px;
-            font-size: 16px;
+        .app-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
         }
+        .app-info span { color: #6b7280; font-size: 13px; }
+        .app-info a { color: #8b5cf6; text-decoration: none; }
+        .app-info a:hover { text-decoration: underline; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .building-indicator {
             display: inline-block;
             animation: pulse 1.5s ease-in-out infinite;
-            color: #8b5cf6;
+            color: #a78bfa;
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 12px; }
+            .log-entry { flex-wrap: wrap; gap: 4px; }
+            .log-entry .time { min-width: 100px; }
+            .app-info { flex-direction: column; gap: 8px; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="brand-icon">🔥</span>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="brand">
+                <div class="brand-icon"><i class="fas fa-fire"></i></div>
                 <span class="brand-text">CyberDark Host</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/deploy.html">Deploy</a>
-                <a href="/wallet.html">Wallet</a>
-                <a href="/login.html" class="btn-login">Login</a>
-            </div>
-        </nav>
-
-        <div class="logs-container">
-            <div class="log-header">
-                <div>
-                    <h1>📋 Deployment Logs</h1>
-                    <p id="appNameDisplay" style="color:#a1a1aa; font-size:14px;"></p>
-                </div>
-                <div>
-                    <span id="statusBadge" class="log-status status-pending">Pending</span>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
-                <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
-                    <span style="color:#52525b;">App URL:</span>
-                    <a id="appUrlLink" href="#" target="_blank" style="color:#8b5cf6; text-decoration:none;">-</a>
-                </div>
-                <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
-                    <span style="color:#52525b;">Created:</span>
-                    <span id="createdAt" style="color:#e4e4e7;">-</span>
-                </div>
-            </div>
-
-            <div class="log-list" id="logList">
-                <div class="empty-logs">Loading logs...</div>
-            </div>
-
-            <div class="auto-refresh">
-                <input type="checkbox" id="autoRefresh" checked>
-                <label for="autoRefresh">Auto-refresh (5s)</label>
-                <button class="btn-secondary" onclick="fetchLogs()" style="padding:6px 16px; font-size:13px;">🔄 Refresh</button>
-            </div>
-
-            <a href="/deploy.html" class="btn-secondary back-btn">← Back to Deploy</a>
+            </a>
+            <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
 
-        <footer class="footer">
-            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
-        </footer>
+        <div class="log-header">
+            <div>
+                <h1>📋 Deployment Logs</h1>
+                <p id="appNameDisplay" style="color:#6b7280; font-size:14px; margin-top:4px;"></p>
+            </div>
+            <div>
+                <span id="statusBadge" class="log-status status-pending">Pending</span>
+            </div>
+        </div>
+
+        <div class="app-info">
+            <span>🔗 App URL: <a id="appUrlLink" href="#" target="_blank">-</a></span>
+            <span>📅 Created: <span id="createdAt">-</span></span>
+        </div>
+
+        <div class="log-list" id="logList">
+            <div class="empty-logs"><i class="fas fa-spinner fa-spin"></i>Loading logs...</div>
+        </div>
+
+        <div class="auto-refresh">
+            <input type="checkbox" id="autoRefresh" checked>
+            <label for="autoRefresh">Auto-refresh (5s)</label>
+            <button class="btn btn-ghost" onclick="fetchLogs()">🔄 Refresh</button>
+        </div>
     </div>
 
-    <script src="script.js"></script>
     <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
         const deploymentId = window.location.pathname.split('/').pop();
         let autoRefreshInterval = null;
 
+        async function apiGet(path) {
+            const res = await fetch(path, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            return res.json();
+        }
+
         async function fetchLogs() {
             try {
-                const response = await fetch(`/api/deployment-logs/${deploymentId}`);
-                const data = await response.json();
-
+                const data = await apiGet(`/api/deployment-logs/${deploymentId}`);
                 if (!data.success) {
-                    document.getElementById('logList').innerHTML = `<div class="empty-logs">❌ ${data.error}</div>`;
+                    document.getElementById('logList').innerHTML = `<div class="empty-logs"><i class="fas fa-exclamation-triangle"></i>${data.error}</div>`;
                     return;
                 }
 
@@ -212,7 +264,7 @@
 
                 const list = document.getElementById('logList');
                 if (logs.length === 0) {
-                    list.innerHTML = '<div class="empty-logs">No logs yet. Waiting for deployment...</div>';
+                    list.innerHTML = `<div class="empty-logs"><i class="fas fa-hourglass-half"></i>No logs yet. Waiting for deployment...</div>`;
                 } else {
                     list.innerHTML = logs.map(log => `
                         <div class="log-entry">
@@ -238,7 +290,7 @@
                 }
 
             } catch (error) {
-                document.getElementById('logList').innerHTML = `<div class="empty-logs">❌ Error fetching logs: ${error.message}</div>`;
+                document.getElementById('logList').innerHTML = `<div class="empty-logs"><i class="fas fa-exclamation-triangle"></i>Error: ${error.message}</div>`;
             }
         }
 
@@ -255,7 +307,6 @@
         });
 
         fetchLogs();
-
         if (document.getElementById('autoRefresh').checked) {
             autoRefreshInterval = setInterval(fetchLogs, 5000);
         }
