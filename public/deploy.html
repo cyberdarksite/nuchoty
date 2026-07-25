@@ -3,17 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deploy - HerokuDeployer</title>
+    <title>Deploy - CyberDark Host</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .brand-text {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+        .cost-amount {
+            color: #8b5cf6;
+        }
+        .balance-amount {
+            color: #8b5cf6;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Navbar -->
         <nav class="navbar">
             <div class="nav-brand">
-                <span class="brand-icon">🚀</span>
-                <span class="brand-text">HerokuDeployer</span>
+                <span class="brand-icon">🔥</span>
+                <span class="brand-text">CyberDark Host</span>
             </div>
             <div class="nav-links">
                 <a href="/">Home</a>
@@ -26,12 +48,17 @@
         <!-- Deploy Section -->
         <section class="deploy-section">
             <div class="deploy-container">
-                <h1>Deploy Your Application</h1>
+                <h1>🚀 Deploy Your Application</h1>
                 <p class="subtitle">Enter your details and deploy your bot in minutes</p>
 
-                <div class="balance-display" id="balanceDisplay">
+                <div class="balance-display">
                     <span class="balance-label">💰 Wallet Balance:</span>
-                    <span class="balance-amount" id="walletBalance">₦0.00</span>
+                    <span class="balance-amount" id="walletBalance">KSH 0.00</span>
+                </div>
+
+                <div class="deployment-cost">
+                    <span>🔥 Deployment Cost:</span>
+                    <span class="cost-amount">KSH 50</span>
                 </div>
 
                 <form id="deployForm" class="deploy-form">
@@ -61,43 +88,44 @@
                         </select>
                     </div>
 
-                    <div class="deployment-cost">
-                        <span>Deployment Cost:</span>
-                        <span class="cost-amount">₦500</span>
-                    </div>
-
                     <button type="submit" class="btn-primary btn-block" id="deployBtn">
-                        🚀 Deploy Now
+                        🔥 Deploy Now
                     </button>
                 </form>
 
                 <div id="deploymentResult" class="deployment-result"></div>
+                <div id="logsLink" style="margin-top: 16px; display: none;">
+                    <a id="logsLinkAnchor" href="#" target="_blank" class="btn-secondary">📋 View Deployment Logs</a>
+                </div>
             </div>
         </section>
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
         </footer>
     </div>
 
+    <script src="script.js"></script>
     <script>
-        // Load user data
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (currentUser.email) {
-            document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
-            document.querySelector('.btn-login').href = '/wallet.html';
-            updateBalance();
+        const currentUser = getCurrentUser();
+
+        if (!isLoggedIn()) {
+            window.location.href = '/login.html';
+        }
+
+        document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
+        document.querySelector('.btn-login').href = '/wallet.html';
+
+        function formatKSH(amount) {
+            return `KSH ${Number(amount).toLocaleString()}`;
         }
 
         async function updateBalance() {
             try {
-                if (currentUser.email) {
-                    const response = await fetch(`/api/wallet/${currentUser.email}`);
-                    const data = await response.json();
-                    if (data.success) {
-                        document.getElementById('walletBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
-                    }
+                const data = await fetchWalletBalance(currentUser.email);
+                if (data.success) {
+                    document.getElementById('walletBalance').textContent = formatKSH(data.walletBalance);
                 }
             } catch (error) {
                 console.error('Error fetching balance:', error);
@@ -108,7 +136,7 @@
             e.preventDefault();
 
             if (!currentUser.email) {
-                showResult('Please login first to deploy', 'error');
+                showToast('Please login first to deploy', 'error');
                 setTimeout(() => window.location.href = '/login.html', 2000);
                 return;
             }
@@ -122,8 +150,7 @@
                 appName: document.getElementById('appName').value,
                 repoUrl: document.getElementById('repoUrl').value,
                 sessionId: document.getElementById('sessionId').value,
-                teamName: document.getElementById('teamName').value,
-                amount: 500
+                teamName: document.getElementById('teamName').value
             };
 
             try {
@@ -134,35 +161,43 @@
                 });
 
                 const data = await response.json();
+                const resultDiv = document.getElementById('deploymentResult');
+                const logsLink = document.getElementById('logsLink');
+                const logsLinkAnchor = document.getElementById('logsLinkAnchor');
 
                 if (data.success) {
-                    showResult(`
-                        ✅ Deployment started successfully!<br>
+                    resultDiv.className = 'deployment-result success';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Deployment started successfully!</strong><br>
                         <strong>App Name:</strong> ${data.appName}<br>
                         <strong>App URL:</strong> <a href="${data.appUrl}" target="_blank">${data.appUrl}</a><br>
                         <strong>Dashboard:</strong> <a href="${data.dashboardUrl}" target="_blank">View on Heroku</a><br>
-                        <strong>Balance Remaining:</strong> ₦${data.balanceRemaining.toLocaleString()}
-                    `, 'success');
+                        <strong>Balance Remaining:</strong> ${formatKSH(data.balanceRemaining)}
+                    `;
                     
-                    // Update balance
+                    // Show logs link
+                    logsLink.style.display = 'block';
+                    logsLinkAnchor.href = `/logs/${data.deploymentId}`;
+                    
                     await updateBalance();
                 } else {
-                    showResult(`❌ ${data.error}<br>${data.details || ''}`, 'error');
+                    resultDiv.className = 'deployment-result error';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `❌ <strong>${data.error}</strong><br>${data.details || ''}`;
                 }
             } catch (error) {
-                showResult(`❌ Error: ${error.message}`, 'error');
+                const resultDiv = document.getElementById('deploymentResult');
+                resultDiv.className = 'deployment-result error';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `❌ <strong>Error:</strong> ${error.message}`;
             } finally {
                 deployBtn.disabled = false;
-                deployBtn.textContent = '🚀 Deploy Now';
+                deployBtn.textContent = '🔥 Deploy Now';
             }
         });
 
-        function showResult(message, type) {
-            const resultDiv = document.getElementById('deploymentResult');
-            resultDiv.className = `deployment-result ${type}`;
-            resultDiv.innerHTML = message;
-            resultDiv.style.display = 'block';
-        }
+        updateBalance();
     </script>
 </body>
 </html>
