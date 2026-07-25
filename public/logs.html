@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deployment Logs</title>
+    <title>Deployment Logs - CyberDark Host</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        .brand-text {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
         .logs-container {
             max-width: 900px;
             margin: 40px auto;
@@ -30,7 +38,7 @@
             text-transform: uppercase;
         }
         .status-pending { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .status-building { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .status-building { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
         .status-deployed { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
         .status-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
@@ -73,7 +81,7 @@
             text-transform: uppercase;
             margin-right: 6px;
         }
-        .badge-info { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .badge-info { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
         .badge-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
         .badge-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
         .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
@@ -91,7 +99,7 @@
         .auto-refresh input[type="checkbox"] {
             width: 18px;
             height: 18px;
-            accent-color: #6366f1;
+            accent-color: #8b5cf6;
         }
 
         .back-btn {
@@ -113,7 +121,7 @@
         .building-indicator {
             display: inline-block;
             animation: pulse 1.5s ease-in-out infinite;
-            color: #818cf8;
+            color: #8b5cf6;
         }
     </style>
 </head>
@@ -121,8 +129,8 @@
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <span class="brand-icon">🚀</span>
-                <span class="brand-text">HerokuDeployer</span>
+                <span class="brand-icon">🔥</span>
+                <span class="brand-text">CyberDark Host</span>
             </div>
             <div class="nav-links">
                 <a href="/">Home</a>
@@ -146,7 +154,7 @@
             <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
                 <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
                     <span style="color:#52525b;">App URL:</span>
-                    <a id="appUrlLink" href="#" target="_blank" style="color:#6366f1; text-decoration:none;">-</a>
+                    <a id="appUrlLink" href="#" target="_blank" style="color:#8b5cf6; text-decoration:none;">-</a>
                 </div>
                 <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
                     <span style="color:#52525b;">Created:</span>
@@ -168,10 +176,11 @@
         </div>
 
         <footer class="footer">
-            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
         </footer>
     </div>
 
+    <script src="script.js"></script>
     <script>
         const deploymentId = window.location.pathname.split('/').pop();
         let autoRefreshInterval = null;
@@ -189,7 +198,6 @@
                 const dep = data.deployment;
                 const logs = data.logs || [];
 
-                // Update header
                 document.getElementById('appNameDisplay').textContent = `App: ${dep.appName}`;
                 document.getElementById('statusBadge').textContent = dep.status.toUpperCase();
                 document.getElementById('statusBadge').className = `log-status status-${dep.status}`;
@@ -202,7 +210,6 @@
                     document.getElementById('createdAt').textContent = new Date(dep.createdAt).toLocaleString();
                 }
 
-                // Build log entries
                 const list = document.getElementById('logList');
                 if (logs.length === 0) {
                     list.innerHTML = '<div class="empty-logs">No logs yet. Waiting for deployment...</div>';
@@ -214,11 +221,9 @@
                             <span class="message type-${log.type}">${log.message}</span>
                         </div>
                     `).join('');
-                    // Scroll to bottom
                     list.scrollTop = list.scrollHeight;
                 }
 
-                // If deployment is still building and auto-refresh is on, keep refreshing
                 if (dep.status === 'building' || dep.status === 'pending') {
                     if (document.getElementById('autoRefresh').checked) {
                         if (!autoRefreshInterval) {
@@ -226,7 +231,6 @@
                         }
                     }
                 } else {
-                    // Stop auto-refresh
                     if (autoRefreshInterval) {
                         clearInterval(autoRefreshInterval);
                         autoRefreshInterval = null;
@@ -238,7 +242,6 @@
             }
         }
 
-        // Auto-refresh toggle
         document.getElementById('autoRefresh').addEventListener('change', function() {
             if (this.checked) {
                 fetchLogs();
@@ -251,10 +254,8 @@
             }
         });
 
-        // Initial fetch
         fetchLogs();
 
-        // Start auto-refresh initially if checked
         if (document.getElementById('autoRefresh').checked) {
             autoRefreshInterval = setInterval(fetchLogs, 5000);
         }
