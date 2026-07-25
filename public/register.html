@@ -4,22 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - CyberDark Host</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .brand-text {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #08090d;
+            color: #ecedf0;
+            padding: 20px;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+        }
+        .auth-card {
+            background: #0f1117;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 40px;
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: #fff;
+            box-shadow: 0 8px 30px -8px rgba(139, 92, 246, 0.4);
+        }
+        .auth-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        .auth-header p { color: #6b7280; font-size: 14px; margin-top: 4px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9ba1ad;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
-        .btn-primary:hover {
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #14171f;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            color: #ecedf0;
+            font-size: 14px;
+            transition: border .15s ease;
+            font-family: inherit;
+        }
+        .form-group input:focus {
+            border-color: #8b5cf6;
+            outline: none;
+        }
+        .form-group input::placeholder { color: #6b7280; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s ease;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+            box-shadow: 0 4px 20px -8px rgba(139, 92, 246, 0.4);
+        }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #6b7280;
         }
         .auth-links a {
             color: #8b5cf6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-links a:hover { text-decoration: underline; }
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            display: none;
+        }
+        .message.error {
+            display: block;
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .message.success {
+            display: block;
+            background: rgba(16,185,129,0.1);
+            color: #4ade80;
+            border: 1px solid rgba(16,185,129,0.2);
         }
     </style>
 </head>
@@ -27,102 +135,96 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <span class="auth-icon">🔥</span>
-                <h2 style="background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CyberDark Host</h2>
-                <p>Create your account and start deploying</p>
+                <div class="auth-icon"><i class="fas fa-fire"></i></div>
+                <h1>CyberDark Host</h1>
+                <p>Create your account</p>
             </div>
 
-            <form id="registerForm" class="auth-form">
+            <form id="registerForm">
                 <div class="form-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Choose a username" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+                    <label>Email Address</label>
                     <input type="email" id="email" placeholder="Enter your email" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label>Password</label>
                     <input type="password" id="password" placeholder="Create a password (min 6 chars)" required minlength="6">
                 </div>
-
                 <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
+                    <label>Confirm Password</label>
                     <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
                 </div>
-
-                <button type="submit" class="btn-primary btn-block">Create Account</button>
-
-                <div class="auth-links">
-                    <span>Already have an account?</span>
-                    <a href="/login.html">Login</a>
-                </div>
-
+                <button type="submit" class="btn btn-primary" id="registerBtn">Create Account</button>
                 <div id="registerMessage" class="message"></div>
             </form>
+
+            <div class="auth-links">
+                Already have an account? <a href="/login.html">Login</a>
+            </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('registerBtn');
+            const msg = document.getElementById('registerMessage');
 
-            if (!fullName || !email || !password || !confirmPassword) {
-                showMessage('Please fill in all fields', 'error');
+            if (!username || !email || !password || !confirmPassword) {
+                msg.className = 'message error';
+                msg.textContent = 'Please fill in all fields';
                 return;
             }
 
             if (password !== confirmPassword) {
-                showMessage('Passwords do not match', 'error');
+                msg.className = 'message error';
+                msg.textContent = 'Passwords do not match';
                 return;
             }
 
             if (password.length < 6) {
-                showMessage('Password must be at least 6 characters', 'error');
+                msg.className = 'message error';
+                msg.textContent = 'Password must be at least 6 characters';
                 return;
             }
 
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            if (users.find(u => u.email === email)) {
-                showMessage('User with this email already exists', 'error');
-                return;
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            msg.className = 'message';
+            msg.textContent = '';
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    msg.className = 'message success';
+                    msg.textContent = '✅ Account created! Redirecting...';
+                    setTimeout(() => window.location.href = '/', 1000);
+                } else {
+                    msg.className = 'message error';
+                    msg.textContent = data.error || 'Registration failed';
+                }
+            } catch (err) {
+                msg.className = 'message error';
+                msg.textContent = 'Server error. Please try again.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
             }
-
-            const newUser = {
-                fullName,
-                email,
-                password,
-                walletBalance: 0,
-                createdAt: new Date().toISOString()
-            };
-
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
-
-            showMessage('✅ Account created successfully! Redirecting...', 'success');
-            setTimeout(() => {
-                window.location.href = '/deploy.html';
-            }, 1000);
         });
-
-        function showMessage(message, type) {
-            const msgDiv = document.getElementById('registerMessage');
-            msgDiv.textContent = message;
-            msgDiv.className = `message ${type}`;
-            msgDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                msgDiv.style.display = 'none';
-            }, 5000);
-        }
     </script>
 </body>
 </html>
