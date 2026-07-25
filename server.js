@@ -37,7 +37,7 @@ app.post('/deploy', async (req, res) => {
             'https://api.heroku.com/apps', 
             { 
                 name: generatedAppName,
-                team: 'iamricky'  // Specify the team
+                organization: 'iamricky'  // Changed from 'team' to 'organization'
             }, 
             { headers: herokuHeaders }
         );
