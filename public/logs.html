@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Logs</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .logs-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .log-header h1 {
+            font-size: 28px;
+        }
+        .log-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .status-pending { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .status-building { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .status-deployed { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .log-list {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .log-entry .time {
+            color: #52525b;
+            min-width: 140px;
+            font-size: 12px;
+        }
+        .log-entry .message {
+            flex: 1;
+            word-break: break-word;
+        }
+        .log-entry .type-info { color: #818cf8; }
+        .log-entry .type-success { color: #4ade80; }
+        .log-entry .type-error { color: #f87171; }
+        .log-entry .type-warning { color: #fbbf24; }
+
+        .log-entry .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+        .badge-info { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .badge-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .auto-refresh label {
+            color: #a1a1aa;
+            font-size: 14px;
+        }
+        .auto-refresh input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #6366f1;
+        }
+
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .empty-logs {
+            text-align: center;
+            color: #52525b;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .building-indicator {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+            color: #818cf8;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🚀</span>
+                <span class="brand-text">HerokuDeployer</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/deploy.html">Deploy</a>
+                <a href="/wallet.html">Wallet</a>
+                <a href="/login.html" class="btn-login">Login</a>
+            </div>
+        </nav>
+
+        <div class="logs-container">
+            <div class="log-header">
+                <div>
+                    <h1>📋 Deployment Logs</h1>
+                    <p id="appNameDisplay" style="color:#a1a1aa; font-size:14px;"></p>
+                </div>
+                <div>
+                    <span id="statusBadge" class="log-status status-pending">Pending</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
+                    <span style="color:#52525b;">App URL:</span>
+                    <a id="appUrlLink" href="#" target="_blank" style="color:#6366f1; text-decoration:none;">-</a>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 8px;">
+                    <span style="color:#52525b;">Created:</span>
+                    <span id="createdAt" style="color:#e4e4e7;">-</span>
+                </div>
+            </div>
+
+            <div class="log-list" id="logList">
+                <div class="empty-logs">Loading logs...</div>
+            </div>
+
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" checked>
+                <label for="autoRefresh">Auto-refresh (5s)</label>
+                <button class="btn-secondary" onclick="fetchLogs()" style="padding:6px 16px; font-size:13px;">🔄 Refresh</button>
+            </div>
+
+            <a href="/deploy.html" class="btn-secondary back-btn">← Back to Deploy</a>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+        </footer>
+    </div>
+
+    <script>
+        const deploymentId = window.location.pathname.split('/').pop();
+        let autoRefreshInterval = null;
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch(`/api/deployment-logs/${deploymentId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    document.getElementById('logList').innerHTML = `<div class="empty-logs">❌ ${data.error}</div>`;
+                    return;
+                }
+
+                const dep = data.deployment;
+                const logs = data.logs || [];
+
+                // Update header
+                document.getElementById('appNameDisplay').textContent = `App: ${dep.appName}`;
+                document.getElementById('statusBadge').textContent = dep.status.toUpperCase();
+                document.getElementById('statusBadge').className = `log-status status-${dep.status}`;
+
+                if (dep.appUrl) {
+                    document.getElementById('appUrlLink').textContent = dep.appUrl;
+                    document.getElementById('appUrlLink').href = dep.appUrl;
+                }
+                if (dep.createdAt) {
+                    document.getElementById('createdAt').textContent = new Date(dep.createdAt).toLocaleString();
+                }
+
+                // Build log entries
+                const list = document.getElementById('logList');
+                if (logs.length === 0) {
+                    list.innerHTML = '<div class="empty-logs">No logs yet. Waiting for deployment...</div>';
+                } else {
+                    list.innerHTML = logs.map(log => `
+                        <div class="log-entry">
+                            <span class="time">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                            <span class="badge badge-${log.type}">${log.type}</span>
+                            <span class="message type-${log.type}">${log.message}</span>
+                        </div>
+                    `).join('');
+                    // Scroll to bottom
+                    list.scrollTop = list.scrollHeight;
+                }
+
+                // If deployment is still building and auto-refresh is on, keep refreshing
+                if (dep.status === 'building' || dep.status === 'pending') {
+                    if (document.getElementById('autoRefresh').checked) {
+                        if (!autoRefreshInterval) {
+                            autoRefreshInterval = setInterval(fetchLogs, 5000);
+                        }
+                    }
+                } else {
+                    // Stop auto-refresh
+                    if (autoRefreshInterval) {
+                        clearInterval(autoRefreshInterval);
+                        autoRefreshInterval = null;
+                    }
+                }
+
+            } catch (error) {
+                document.getElementById('logList').innerHTML = `<div class="empty-logs">❌ Error fetching logs: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-refresh toggle
+        document.getElementById('autoRefresh').addEventListener('change', function() {
+            if (this.checked) {
+                fetchLogs();
+                autoRefreshInterval = setInterval(fetchLogs, 5000);
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        });
+
+        // Initial fetch
+        fetchLogs();
+
+        // Start auto-refresh initially if checked
+        if (document.getElementById('autoRefresh').checked) {
+            autoRefreshInterval = setInterval(fetchLogs, 5000);
+        }
+    </script>
+</body>
+</html>
