@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy - HerokuDeployer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🚀</span>
+                <span class="brand-text">HerokuDeployer</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/deploy.html" class="active">Deploy</a>
+                <a href="/wallet.html">Wallet</a>
+                <a href="/login.html" class="btn-login">Login</a>
+            </div>
+        </nav>
+
+        <!-- Deploy Section -->
+        <section class="deploy-section">
+            <div class="deploy-container">
+                <h1>Deploy Your Application</h1>
+                <p class="subtitle">Enter your details and deploy your bot in minutes</p>
+
+                <div class="balance-display" id="balanceDisplay">
+                    <span class="balance-label">💰 Wallet Balance:</span>
+                    <span class="balance-amount" id="walletBalance">₦0.00</span>
+                </div>
+
+                <form id="deployForm" class="deploy-form">
+                    <div class="form-group">
+                        <label for="appName">App Name</label>
+                        <input type="text" id="appName" placeholder="e.g., my-whatsapp-bot" required>
+                        <small>Must be unique. Use only lowercase letters, numbers, and hyphens.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="repoUrl">GitHub Repository URL</label>
+                        <input type="url" id="repoUrl" placeholder="https://github.com/username/repo" required>
+                        <small>Only public repositories are supported.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sessionId">SESSION_ID</label>
+                        <input type="text" id="sessionId" placeholder="Enter your WhatsApp session ID" required>
+                        <small>Your WhatsApp session ID for bot authentication.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="teamName">Team Name</label>
+                        <select id="teamName">
+                            <option value="iamricky">iamricky</option>
+                            <option value="appdevs-team">appdevs-team</option>
+                        </select>
+                    </div>
+
+                    <div class="deployment-cost">
+                        <span>Deployment Cost:</span>
+                        <span class="cost-amount">₦500</span>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-block" id="deployBtn">
+                        🚀 Deploy Now
+                    </button>
+                </form>
+
+                <div id="deploymentResult" class="deployment-result"></div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 HerokuDeployer. Built with ❤️ for the developer community.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Load user data
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (currentUser.email) {
+            document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
+            document.querySelector('.btn-login').href = '/wallet.html';
+            updateBalance();
+        }
+
+        async function updateBalance() {
+            try {
+                if (currentUser.email) {
+                    const response = await fetch(`/api/wallet/${currentUser.email}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('walletBalance').textContent = `₦${data.walletBalance.toLocaleString()}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+            }
+        }
+
+        document.getElementById('deployForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!currentUser.email) {
+                showResult('Please login first to deploy', 'error');
+                setTimeout(() => window.location.href = '/login.html', 2000);
+                return;
+            }
+
+            const deployBtn = document.getElementById('deployBtn');
+            deployBtn.disabled = true;
+            deployBtn.textContent = '⏳ Deploying...';
+
+            const formData = {
+                email: currentUser.email,
+                appName: document.getElementById('appName').value,
+                repoUrl: document.getElementById('repoUrl').value,
+                sessionId: document.getElementById('sessionId').value,
+                teamName: document.getElementById('teamName').value,
+                amount: 500
+            };
+
+            try {
+                const response = await fetch('/api/deploy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(`
+                        ✅ Deployment started successfully!<br>
+                        <strong>App Name:</strong> ${data.appName}<br>
+                        <strong>App URL:</strong> <a href="${data.appUrl}" target="_blank">${data.appUrl}</a><br>
+                        <strong>Dashboard:</strong> <a href="${data.dashboardUrl}" target="_blank">View on Heroku</a><br>
+                        <strong>Balance Remaining:</strong> ₦${data.balanceRemaining.toLocaleString()}
+                    `, 'success');
+                    
+                    // Update balance
+                    await updateBalance();
+                } else {
+                    showResult(`❌ ${data.error}<br>${data.details || ''}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                deployBtn.disabled = false;
+                deployBtn.textContent = '🚀 Deploy Now';
+            }
+        });
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('deploymentResult');
+            resultDiv.className = `deployment-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
