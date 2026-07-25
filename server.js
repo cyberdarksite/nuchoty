@@ -1,11 +1,17 @@
-require('dotenv').config();
-const express = require('express');
-const axios = require('axios');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
-const fs = require('fs');
+import dotenv from 'dotenv';
+import express from 'express';
+import axios from 'axios';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
+import crypto from 'crypto';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 // Environment variables
 const HEROKU_API_KEY = process.env.HEROKU_API_KEY || '';
 const HEROKU_TEAM = process.env.HEROKU_TEAM || 'iamricky';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/heroku-deployer';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cyberdark-host';
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
 const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY || '';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -86,7 +92,11 @@ const paymentSchema = new mongoose.Schema({
     amount: { type: Number, required: true },
     reference: { type: String, unique: true, required: true },
     type: { type: String, enum: ['deposit', 'deployment'], default: 'deposit' },
-    status: { type: String, enum: ['pending', 'success', 'failed', 'expired'], default: 'pending' },
+    status: { 
+        type: String, 
+        enum: ['pending', 'success', 'failed', 'expired'],
+        default: 'pending'
+    },
     paymentDate: { type: Date, default: Date.now },
     metadata: { type: Object, default: {} }
 });
@@ -164,7 +174,7 @@ async function processDeployment(payment) {
         paymentReference: payment.reference,
         amountPaid: DEPLOYMENT_COST,
         deploymentStatus: 'pending',
-        logs: [{ timestamp: new Date(), message: '🚀 Deployment initiated...', type: 'info' }]
+        logs: [{ timestamp: new Date(), message: '🔥 Deployment initiated...', type: 'info' }]
     });
     await deployment.save();
 
@@ -181,7 +191,6 @@ async function processDeployment(payment) {
 
         await addDeploymentLog(deployment._id, `✅ Balance check passed. Available: KSH ${user.walletBalance}`, 'success');
 
-        // Deduct from wallet
         user.walletBalance -= DEPLOYMENT_COST;
         user.totalSpent += DEPLOYMENT_COST;
         user.transactions.push({
@@ -196,7 +205,6 @@ async function processDeployment(payment) {
         await addDeploymentLog(deployment._id, `💰 KSH ${DEPLOYMENT_COST} deducted from wallet`, 'success');
         await addDeploymentLog(deployment._id, `📊 Remaining balance: KSH ${user.walletBalance}`, 'info');
 
-        // Create Heroku app
         await addDeploymentLog(deployment._id, `🌐 Creating Heroku app: ${deployment.appName}...`, 'info');
         const createAppRes = await axios.post(
             'https://api.heroku.com/organizations/apps',
@@ -206,7 +214,6 @@ async function processDeployment(payment) {
         await addDeploymentLog(deployment._id, `✅ Heroku app created: ${deployment.appName}`, 'success');
         await addDeploymentLog(deployment._id, `🔗 App URL: ${createAppRes.data.web_url}`, 'info');
 
-        // Set config vars
         await addDeploymentLog(deployment._id, `⚙️ Setting configuration variables...`, 'info');
         await axios.patch(
             `https://api.heroku.com/apps/${deployment.appName}/config-vars`,
@@ -220,7 +227,6 @@ async function processDeployment(payment) {
         );
         await addDeploymentLog(deployment._id, `✅ Configuration variables set`, 'success');
 
-        // Trigger build
         await addDeploymentLog(deployment._id, `📦 Building from repository: ${repoUrl}`, 'info');
         const buildRes = await axios.post(
             `https://api.heroku.com/apps/${deployment.appName}/builds`,
@@ -239,7 +245,6 @@ async function processDeployment(payment) {
 
         await deployment.save();
 
-        // Update user's deployments list
         await User.findByIdAndUpdate(userId, { $push: { deployments: deployment._id } });
 
         return deployment;
@@ -256,7 +261,7 @@ async function processDeployment(payment) {
 
 // ==================== API ENDPOINTS ====================
 
-// 1. Initialize deposit (Paystack)
+// 1. Initialize deposit
 app.post('/api/deposit/initialize', async (req, res) => {
     try {
         const { email, amount, userId } = req.body;
@@ -413,7 +418,6 @@ app.post('/api/deploy', async (req, res) => {
             });
         }
 
-        // Create payment record
         const reference = `DEPLOY-${Date.now()}-${uuidv4().slice(0, 8)}`;
         const payment = new Payment({
             userId: user._id.toString(),
@@ -426,7 +430,6 @@ app.post('/api/deploy', async (req, res) => {
         });
         await payment.save();
 
-        // Process deployment
         const deployment = await processDeployment(payment);
 
         res.json({
@@ -452,7 +455,7 @@ app.post('/api/deploy', async (req, res) => {
     }
 });
 
-// 5. Get deployment logs by deployment ID
+// 5. Get deployment logs
 app.get('/api/deployment-logs/:deploymentId', async (req, res) => {
     try {
         const { deploymentId } = req.params;
@@ -477,7 +480,7 @@ app.get('/api/deployment-logs/:deploymentId', async (req, res) => {
     }
 });
 
-// 6. Get all deployments for a user (with logs)
+// 6. Get all deployments for a user
 app.get('/api/deployments/:email', async (req, res) => {
     try {
         const { email } = req.params;
@@ -490,9 +493,10 @@ app.get('/api/deployments/:email', async (req, res) => {
                 appName: d.appName,
                 status: d.deploymentStatus,
                 appUrl: d.appUrl,
+                amountPaid: d.amountPaid,
                 createdAt: d.createdAt,
                 deployedAt: d.deployedAt,
-                logs: d.logs.slice(-5) // last 5 logs
+                logs: d.logs.slice(-5)
             }))
         });
     } catch (error) {
@@ -522,7 +526,7 @@ app.get('/api/wallet/:email', async (req, res) => {
     }
 });
 
-// 8. Get transaction history
+// 8. Get transactions
 app.get('/api/transactions/:email', async (req, res) => {
     try {
         const { email } = req.params;
@@ -585,7 +589,7 @@ app.get('/api/build-status/:appName/:buildId', async (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
-        service: 'Heroku Deployer with Paystack',
+        service: 'CyberDark Host',
         version: '4.0.0',
         team: HEROKU_TEAM,
         timestamp: new Date().toISOString(),
@@ -595,7 +599,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// 12. Serve the logs page
+// 12. Serve logs page
 app.get('/logs/:deploymentId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'logs.html'));
 });
@@ -613,7 +617,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-    log(LOG_LEVELS.INFO, `🚀 Heroku Deployer running on port ${PORT}`);
+    log(LOG_LEVELS.INFO, `🔥 CyberDark Host running on port ${PORT}`);
     log(LOG_LEVELS.INFO, `📁 Default team: ${HEROKU_TEAM}`);
     log(LOG_LEVELS.INFO, `💰 Deployment cost: KSH ${DEPLOYMENT_COST}`);
     log(LOG_LEVELS.INFO, `📊 MongoDB: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected'}`);
