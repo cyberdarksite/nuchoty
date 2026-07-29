@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
-    <title>CyberDark Host | Dashboard</title>
+    <title>Bot Host KE | Dashboard</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,8 +23,8 @@
             --fg-soft: #8a8f9c;
             --line: rgba(15, 23, 42, 0.07);
             --line-strong: rgba(15, 23, 42, 0.12);
-            --brand: #8b5cf6;
-            --brand-soft: rgba(139, 92, 246, 0.08);
+            --brand: #22d3ee;
+            --brand-soft: rgba(34, 211, 238, 0.08);
         }
         .dark {
             --bg: #08090d;
@@ -35,8 +35,8 @@
             --fg-soft: #6b7280;
             --line: rgba(255, 255, 255, 0.06);
             --line-strong: rgba(255, 255, 255, 0.12);
-            --brand: #a78bfa;
-            --brand-soft: rgba(167, 139, 250, 0.10);
+            --brand: #22d3ee;
+            --brand-soft: rgba(34, 211, 238, 0.10);
         }
         * { -webkit-tap-highlight-color: transparent; }
         html, body { background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, sans-serif; }
@@ -55,12 +55,12 @@
             position: relative;
             border-radius: 20px;
             overflow: hidden;
-            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            background: linear-gradient(135deg, #0891b2, #0e7490);
             color: #fff;
             border: 1px solid rgba(255,255,255,0.08);
         }
         .dark .hero-card {
-            background: linear-gradient(135deg, #5b21b6, #4338ca);
+            background: linear-gradient(135deg, #0c4a6e, #0a0e1a);
         }
         .hero-card::after {
             content: '';
@@ -124,9 +124,9 @@
         }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: #fff;
-            box-shadow: 0 4px 20px -8px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
+            color: #001014;
+            box-shadow: 0 4px 20px -8px rgba(34, 211, 238, 0.5);
         }
         .btn-primary:hover:not(:disabled) { transform: translateY(-2px); }
         .btn-ghost {
@@ -137,10 +137,6 @@
         .btn-ghost:hover:not(:disabled) { border-color: var(--line-strong); }
         .btn-success {
             background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: #fff;
         }
         .btn-block { width: 100%; justify-content: center; }
@@ -203,7 +199,7 @@
             letter-spacing: 0.04em;
         }
         .status-pending { color: #f59e0b; background: rgba(245,158,11,0.12); }
-        .status-building { color: #8b5cf6; background: rgba(139,92,246,0.12); }
+        .status-building { color: #22d3ee; background: rgba(34,211,238,0.12); }
         .status-deployed { color: #10b981; background: rgba(16,185,129,0.12); }
         .status-failed { color: #ef4444; background: rgba(239,68,68,0.12); }
 
@@ -215,12 +211,12 @@
             width: 36px;
             height: 36px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            box-shadow: 0 6px 20px -8px rgba(139, 92, 246, 0.6);
+            color: #001014;
+            box-shadow: 0 6px 20px -8px rgba(34, 211, 238, 0.6);
         }
         .eyebrow {
             font-size: 10px;
@@ -268,9 +264,9 @@
         <header class="sticky top-0 z-40 backdrop-blur-xl border-b" style="background:color-mix(in oklab, var(--bg) 80%, transparent); border-color:var(--line)">
             <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="brand-mark"><i class="fas fa-fire"></i></div>
+                    <div class="brand-mark"><i class="fas fa-robot"></i></div>
                     <div>
-                        <p class="eyebrow">CyberDark Host</p>
+                        <p class="eyebrow">Bot Host KE</p>
                         <h1 class="text-sm font-semibold" style="color:var(--fg)">Dashboard</h1>
                     </div>
                 </div>
@@ -303,10 +299,10 @@
                         Welcome back, <span id="userName" class="capitalize">User</span>
                     </h2>
                     <p class="text-sm md:text-base mb-6 max-w-lg" style="color:rgba(255,255,255,0.72)">
-                        Deploy your bots with ease. Pay with Paystack and manage everything from one dashboard.
+                        Deploy your WhatsApp bots with ease. Pay with Paystack and manage everything from one dashboard.
                     </p>
                     <div class="flex flex-wrap gap-3">
-                        <button onclick="openDeployModal()" class="btn" style="background:rgba(255,255,255,0.95); color:#4f46e5;">
+                        <button onclick="openDeployModal()" class="btn" style="background:rgba(255,255,255,0.95); color:#0c4a6e;">
                             <i class="fas fa-rocket"></i><span>Deploy Now</span>
                         </button>
                         <button onclick="openTopUp()" class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.2)">
@@ -318,7 +314,7 @@
                     </div>
                 </div>
                 <div class="absolute right-4 bottom-4 opacity-[0.07] pointer-events-none hidden sm:block">
-                    <i class="fas fa-fire text-[12rem] -rotate-12"></i>
+                    <i class="fas fa-robot text-[12rem] -rotate-12"></i>
                 </div>
             </section>
 
@@ -350,7 +346,7 @@
                         <p class="stat-label">Referrals</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-icon" style="background:rgba(34,211,238,0.12); color:#22d3ee"><i class="fas fa-chart-line"></i></div>
                         <p class="stat-value" id="totalSpent">0</p>
                         <p class="stat-label">Total Spent</p>
                     </div>
@@ -388,7 +384,7 @@
                         <p class="text-[10px]" style="color:var(--fg-soft)">View balance</p>
                     </a>
                     <button onclick="copyReferralLink()" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
-                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(139,92,246,0.12); color:#8b5cf6">
+                        <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(34,211,238,0.12); color:#22d3ee">
                             <i class="fas fa-share-alt text-lg"></i>
                         </div>
                         <h4 class="font-semibold text-sm" style="color:var(--fg)">Refer</h4>
@@ -419,13 +415,13 @@
             <div class="max-w-6xl mx-auto px-4 py-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs" style="color:var(--fg-soft)">
                     <div class="flex items-center gap-2">
-                        <i class="fas fa-fire" style="color:var(--brand)"></i>
-                        <span>&copy; 2026 CyberDark Host. All rights reserved.</span>
+                        <i class="fas fa-robot" style="color:var(--brand)"></i>
+                        <span>&copy; 2026 Bot Host KE. All rights reserved.</span>
                     </div>
                     <div class="flex gap-6">
                         <a href="#" class="hover:opacity-80 transition">Terms</a>
                         <a href="#" class="hover:opacity-80 transition">Privacy</a>
-                        <button onclick="showToast('Contact support at support@cyberdark.host', 'info')" class="hover:opacity-80 transition">Support</button>
+                        <button onclick="showToast('Contact support at support@bothostke.com', 'info')" class="hover:opacity-80 transition">Support</button>
                     </div>
                 </div>
             </div>
@@ -437,7 +433,7 @@
         <div class="bottom-sheet">
             <div class="sticky top-0 p-4 border-b flex justify-between items-center" style="background:var(--bg-elev); border-color:var(--line)">
                 <div>
-                    <h3 class="font-display text-base font-semibold" style="color:var(--fg)">🚀 Deploy Application</h3>
+                    <h3 class="font-display text-base font-semibold" style="color:var(--fg)">🚀 Deploy Bot</h3>
                     <p class="text-[11px]" style="color:var(--fg-muted)">Cost: KSH 50 per deployment</p>
                 </div>
                 <button onclick="closeModal('deployModal')" class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--bg-soft); color:var(--fg-muted)">
@@ -446,7 +442,7 @@
             </div>
             <div class="p-4 space-y-4">
                 <div>
-                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">App Name</label>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">Bot Name</label>
                     <input type="text" id="deployAppName" placeholder="my-whatsapp-bot" class="field mt-2">
                     <small class="text-[10px]" style="color:var(--fg-soft)">Lowercase, numbers, and hyphens only</small>
                 </div>
@@ -634,7 +630,7 @@
                                 <i class="fas fa-rocket text-xl"></i>
                             </div>
                             <h3 class="font-display text-base font-semibold mb-1" style="color:var(--fg)">No deployments yet</h3>
-                            <p class="text-xs mb-4" style="color:var(--fg-muted)">Deploy your first app now!</p>
+                            <p class="text-xs mb-4" style="color:var(--fg-muted)">Deploy your first bot now!</p>
                             <button onclick="openDeployModal()" class="btn btn-primary inline-flex"><i class="fas fa-plus text-[11px]"></i><span>Deploy Now</span></button>
                         </div>
                     `;
@@ -643,13 +639,13 @@
                 container.innerHTML = deployments.slice(0, 5).map(d => `
                     <div class="deployment-item">
                         <div class="deployment-info">
-                            <span class="deployment-name">📱 ${d.appName}</span>
+                            <span class="deployment-name">🤖 ${d.appName}</span>
                             <span class="status-pill status-${d.status}">${d.status}</span>
                         </div>
                         <div class="deployment-details">
                             <span>💰 ${formatKSH(d.amountPaid || 0)}</span>
                             <span>📅 ${new Date(d.createdAt).toLocaleDateString()}</span>
-                            ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View App</a>` : ''}
+                            ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View Bot</a>` : ''}
                             ${d.id ? `<a href="/logs/${d.id}" target="_blank">📋 Logs</a>` : ''}
                         </div>
                     </div>
@@ -694,7 +690,7 @@
                     resultDiv.className = 'p-3 rounded-xl text-sm text-emerald-500';
                     resultDiv.innerHTML = `
                         ✅ <strong>Deployment started!</strong><br>
-                        App: ${data.appName}<br>
+                        Bot: ${data.appName}<br>
                         URL: <a href="${data.appUrl}" target="_blank" style="color:var(--brand)">${data.appUrl}</a><br>
                         <a href="/logs/${data.deploymentId}" target="_blank" style="color:var(--brand)">📋 View Logs</a>
                     `;
