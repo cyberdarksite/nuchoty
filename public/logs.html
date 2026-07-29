@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deployment Logs - CyberDark Host</title>
+    <title>Deployment Logs - Bot Host KE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -36,23 +36,23 @@
             width: 36px;
             height: 36px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            color: #fff;
+            color: #001014;
         }
         .brand-text {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .back-link { color: #6b7280; text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: #8b5cf6; }
+        .back-link:hover { color: #22d3ee; }
 
         .log-header {
             display: flex;
@@ -71,7 +71,7 @@
             text-transform: uppercase;
         }
         .status-pending { background: rgba(245,158,11,0.1); color: #fbbf24; }
-        .status-building { background: rgba(139,92,246,0.1); color: #a78bfa; }
+        .status-building { background: rgba(34,211,238,0.1); color: #22d3ee; }
         .status-deployed { background: rgba(16,185,129,0.1); color: #4ade80; }
         .status-failed { background: rgba(239,68,68,0.1); color: #f87171; }
 
@@ -99,7 +99,7 @@
             flex-shrink: 0;
         }
         .log-entry .message { flex: 1; word-break: break-word; }
-        .log-entry .type-info { color: #a78bfa; }
+        .log-entry .type-info { color: #22d3ee; }
         .log-entry .type-success { color: #4ade80; }
         .log-entry .type-error { color: #f87171; }
         .log-entry .type-warning { color: #fbbf24; }
@@ -111,7 +111,7 @@
             text-transform: uppercase;
             margin-right: 6px;
         }
-        .badge-info { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .badge-info { background: rgba(34,211,238,0.2); color: #22d3ee; }
         .badge-success { background: rgba(16,185,129,0.2); color: #4ade80; }
         .badge-error { background: rgba(239,68,68,0.2); color: #f87171; }
         .badge-warning { background: rgba(245,158,11,0.2); color: #fbbf24; }
@@ -134,7 +134,7 @@
         .auto-refresh input[type="checkbox"] {
             width: 18px;
             height: 18px;
-            accent-color: #8b5cf6;
+            accent-color: #22d3ee;
         }
 
         .btn {
@@ -170,14 +170,14 @@
             border: 1px solid rgba(255,255,255,0.04);
         }
         .app-info span { color: #6b7280; font-size: 13px; }
-        .app-info a { color: #8b5cf6; text-decoration: none; }
+        .app-info a { color: #22d3ee; text-decoration: none; }
         .app-info a:hover { text-decoration: underline; }
 
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .building-indicator {
             display: inline-block;
             animation: pulse 1.5s ease-in-out infinite;
-            color: #a78bfa;
+            color: #22d3ee;
         }
 
         @media (max-width: 640px) {
@@ -192,8 +192,8 @@
     <div class="container">
         <div class="header">
             <a href="/" class="brand">
-                <div class="brand-icon"><i class="fas fa-fire"></i></div>
-                <span class="brand-text">CyberDark Host</span>
+                <div class="brand-icon"><i class="fas fa-robot"></i></div>
+                <span class="brand-text">Bot Host KE</span>
             </a>
             <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
@@ -209,7 +209,7 @@
         </div>
 
         <div class="app-info">
-            <span>🔗 App URL: <a id="appUrlLink" href="#" target="_blank">-</a></span>
+            <span>🔗 Bot URL: <a id="appUrlLink" href="#" target="_blank">-</a></span>
             <span>📅 Created: <span id="createdAt">-</span></span>
         </div>
 
@@ -250,7 +250,7 @@
                 const dep = data.deployment;
                 const logs = data.logs || [];
 
-                document.getElementById('appNameDisplay').textContent = `App: ${dep.appName}`;
+                document.getElementById('appNameDisplay').textContent = `Bot: ${dep.appName}`;
                 document.getElementById('statusBadge').textContent = dep.status.toUpperCase();
                 document.getElementById('statusBadge').className = `log-status status-${dep.status}`;
 
