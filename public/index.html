@@ -256,6 +256,28 @@
         }
         .deployment-details a { color: var(--brand); text-decoration: none; }
         .deployment-details a:hover { text-decoration: underline; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--fg-soft);
+        }
+        .empty-state i {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--fg);
+            margin-bottom: 4px;
+        }
+        .empty-state p {
+            font-size: 13px;
+            color: var(--fg-soft);
+        }
     </style>
 </head>
 <body>
@@ -341,14 +363,14 @@
                         <p class="stat-label">Deployments</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b"><i class="fas fa-users"></i></div>
-                        <p class="stat-value" id="referralCount">0</p>
-                        <p class="stat-label">Referrals</p>
-                    </div>
-                    <div class="stat-card">
                         <div class="stat-icon" style="background:rgba(34,211,238,0.12); color:#22d3ee"><i class="fas fa-chart-line"></i></div>
                         <p class="stat-value" id="totalSpent">0</p>
                         <p class="stat-label">Total Spent</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b"><i class="fas fa-users"></i></div>
+                        <p class="stat-value" id="deploymentCount">0</p>
+                        <p class="stat-label">Total Deployments</p>
                     </div>
                 </div>
             </section>
@@ -383,13 +405,13 @@
                         <h4 class="font-semibold text-sm" style="color:var(--fg)">Wallet</h4>
                         <p class="text-[10px]" style="color:var(--fg-soft)">View balance</p>
                     </a>
-                    <button onclick="copyReferralLink()" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
+                    <a href="/" class="p-4 rounded-xl text-center" style="background:var(--bg-soft); border:1px solid var(--line); transition:all .2s">
                         <div class="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-2" style="background:rgba(34,211,238,0.12); color:#22d3ee">
-                            <i class="fas fa-share-alt text-lg"></i>
+                            <i class="fas fa-home text-lg"></i>
                         </div>
-                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Refer</h4>
-                        <p class="text-[10px]" style="color:var(--fg-soft)">Share & earn</p>
-                    </button>
+                        <h4 class="font-semibold text-sm" style="color:var(--fg)">Home</h4>
+                        <p class="text-[10px]" style="color:var(--fg-soft)">Dashboard</p>
+                    </a>
                 </div>
             </section>
 
@@ -454,13 +476,6 @@
                 <div>
                     <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">SESSION_ID</label>
                     <input type="text" id="deploySessionId" placeholder="Enter your WhatsApp session ID" class="field mt-2">
-                </div>
-                <div>
-                    <label class="text-[11px] font-semibold uppercase tracking-wider" style="color:var(--fg-soft)">Team</label>
-                    <select id="deployTeam" class="field mt-2">
-                        <option value="iamricky">iamricky</option>
-                        <option value="appdevs-team">appdevs-team</option>
-                    </select>
                 </div>
                 <div class="flex items-center justify-between p-3 rounded-xl" style="background:var(--bg-soft); border:1px solid var(--line)">
                     <span class="text-sm font-semibold" style="color:var(--fg)">Deployment Cost</span>
@@ -607,7 +622,6 @@
                 document.getElementById('headerBalance').textContent = (currentUser.walletBalance || 0).toLocaleString();
                 document.getElementById('walletBalance').textContent = (currentUser.walletBalance || 0).toLocaleString();
                 document.getElementById('totalSpent').textContent = (currentUser.totalSpent || 0).toLocaleString();
-                document.getElementById('referralCount').textContent = (currentUser.referrals?.length || 0);
                 if (currentUser.role === 'admin') {
                     document.getElementById('userRole').textContent = 'Admin Account';
                 }
@@ -623,19 +637,22 @@
             try {
                 const data = await apiGet(`/api/deployments/${currentUser?.email || ''}`);
                 const deployments = data.deployments || [];
+                
                 if (!deployments.length) {
                     container.innerHTML = `
-                        <div class="text-center py-8">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:var(--brand-soft); color:var(--brand)">
-                                <i class="fas fa-rocket text-xl"></i>
-                            </div>
-                            <h3 class="font-display text-base font-semibold mb-1" style="color:var(--fg)">No deployments yet</h3>
-                            <p class="text-xs mb-4" style="color:var(--fg-muted)">Deploy your first bot now!</p>
-                            <button onclick="openDeployModal()" class="btn btn-primary inline-flex"><i class="fas fa-plus text-[11px]"></i><span>Deploy Now</span></button>
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>No recent deployments</h3>
+                            <p>You haven't deployed any bots yet. Click "Deploy Now" to get started!</p>
+                            <button onclick="openDeployModal()" class="btn btn-primary mt-4 inline-flex">
+                                <i class="fas fa-rocket text-[11px]"></i><span>Deploy Now</span>
+                            </button>
                         </div>
                     `;
+                    document.getElementById('deploymentCount').textContent = '0';
                     return;
                 }
+                
                 container.innerHTML = deployments.slice(0, 5).map(d => `
                     <div class="deployment-item">
                         <div class="deployment-info">
@@ -653,7 +670,16 @@
                 document.getElementById('deploymentCount').textContent = deployments.length;
             } catch (err) {
                 console.error('Error loading deployments:', err);
-                container.innerHTML = `<p class="text-center py-8 text-sm text-rose-500">Failed to load deployments</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No recent deployments</h3>
+                        <p>You haven't deployed any bots yet. Click "Deploy Now" to get started!</p>
+                        <button onclick="openDeployModal()" class="btn btn-primary mt-4 inline-flex">
+                            <i class="fas fa-rocket text-[11px]"></i><span>Deploy Now</span>
+                        </button>
+                    </div>
+                `;
             }
         }
 
@@ -662,7 +688,6 @@
             const appName = document.getElementById('deployAppName').value.trim();
             const repoUrl = document.getElementById('deployRepoUrl').value.trim();
             const sessionId = document.getElementById('deploySessionId').value.trim();
-            const teamName = document.getElementById('deployTeam').value;
             const resultDiv = document.getElementById('deployResult');
             const btn = document.getElementById('deployBtn');
 
@@ -680,10 +705,10 @@
             try {
                 const data = await apiPost('/api/deploy', {
                     email: currentUser.email,
-                    appName,
-                    repoUrl,
-                    sessionId,
-                    teamName
+                    appName: appName,
+                    repoUrl: repoUrl,
+                    sessionId: sessionId,
+                    teamName: 'iamricky' // Hardcoded team
                 });
 
                 if (data.success) {
@@ -758,19 +783,6 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-credit-card"></i><span>Pay with Paystack</span>';
             }
-        }
-
-        // ============ REFERRAL ============
-        function copyReferralLink() {
-            const code = currentUser?.refCode || '';
-            if (!code) {
-                showToast('Referral code not available', 'error');
-                return;
-            }
-            const link = `${window.location.origin}/register?ref=${encodeURIComponent(code)}`;
-            navigator.clipboard.writeText(link)
-                .then(() => showToast('Referral link copied! Share it with friends.', 'success'))
-                .catch(() => showToast('Could not copy link', 'error'));
         }
 
         function logout() {
