@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wallet - CyberDark Host</title>
+    <title>Wallet - Bot Host KE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -34,23 +34,23 @@
             width: 36px;
             height: 36px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            color: #fff;
+            color: #001014;
         }
         .brand-text {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .back-link { color: #6b7280; text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: #8b5cf6; }
+        .back-link:hover { color: #22d3ee; }
 
         .balance-card {
             background: #0f1117;
@@ -66,7 +66,7 @@
             font-size: 48px;
             font-weight: 700;
             margin: 8px 0;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -141,8 +141,8 @@
             text-decoration: none;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: #fff;
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
+            color: #001014;
         }
         .btn-primary:hover { transform: translateY(-2px); }
         .btn-ghost {
@@ -185,7 +185,7 @@
             text-transform: capitalize;
         }
         .status-pending { background: rgba(245,158,11,0.1); color: #fbbf24; }
-        .status-building { background: rgba(139,92,246,0.1); color: #a78bfa; }
+        .status-building { background: rgba(34,211,238,0.1); color: #22d3ee; }
         .status-deployed { background: rgba(16,185,129,0.1); color: #4ade80; }
         .status-failed { background: rgba(239,68,68,0.1); color: #f87171; }
         .deployment-details {
@@ -196,14 +196,13 @@
             flex-wrap: wrap;
             margin-top: 4px;
         }
-        .deployment-details a { color: #8b5cf6; text-decoration: none; }
+        .deployment-details a { color: #22d3ee; text-decoration: none; }
         .deployment-details a:hover { text-decoration: underline; }
 
         @media (max-width: 640px) {
             .balance-amount { font-size: 32px; }
             .balance-stats { gap: 20px; }
             .container { padding: 12px; }
-            .auth-card { padding: 24px; }
         }
     </style>
 </head>
@@ -211,8 +210,8 @@
     <div class="container">
         <div class="header">
             <a href="/" class="brand">
-                <div class="brand-icon"><i class="fas fa-fire"></i></div>
-                <span class="brand-text">CyberDark Host</span>
+                <div class="brand-icon"><i class="fas fa-robot"></i></div>
+                <span class="brand-text">Bot Host KE</span>
             </a>
             <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
@@ -243,7 +242,7 @@
 
         <!-- Transactions -->
         <div class="section">
-            <div class="section-title"><i class="fas fa-clock-rotate-left" style="margin-right: 8px; color:#8b5cf6;"></i>Transaction History</div>
+            <div class="section-title"><i class="fas fa-clock-rotate-left" style="margin-right: 8px; color:#22d3ee;"></i>Transaction History</div>
             <div id="transactionsList">
                 <div class="empty-state"><i class="fas fa-spinner fa-spin"></i>Loading transactions...</div>
             </div>
@@ -251,7 +250,7 @@
 
         <!-- Deployments -->
         <div class="section">
-            <div class="section-title"><i class="fas fa-rocket" style="margin-right: 8px; color:#8b5cf6;"></i>Your Deployments</div>
+            <div class="section-title"><i class="fas fa-rocket" style="margin-right: 8px; color:#22d3ee;"></i>Your Deployments</div>
             <div id="deploymentsList">
                 <div class="empty-state"><i class="fas fa-spinner fa-spin"></i>Loading deployments...</div>
             </div>
@@ -298,7 +297,7 @@
                 }
                 container.innerHTML = transactions.map(t => `
                     <div class="transaction-item">
-                        <div class="transaction-icon" style="background:${t.type === 'deposit' ? 'rgba(16,185,129,0.12)' : 'rgba(139,92,246,0.12)'}; color:${t.type === 'deposit' ? '#4ade80' : '#a78bfa'}">
+                        <div class="transaction-icon" style="background:${t.type === 'deposit' ? 'rgba(16,185,129,0.12)' : 'rgba(34,211,238,0.12)'}; color:${t.type === 'deposit' ? '#4ade80' : '#22d3ee'}">
                             <i class="fas fa-${t.type === 'deposit' ? 'arrow-down' : 'rocket'}"></i>
                         </div>
                         <div class="transaction-details">
@@ -329,13 +328,13 @@
                 container.innerHTML = deployments.map(d => `
                     <div class="deployment-item">
                         <div class="deployment-info">
-                            <span class="deployment-name">📱 ${d.appName}</span>
+                            <span class="deployment-name">🤖 ${d.appName}</span>
                             <span class="deployment-status status-${d.status}">${d.status}</span>
                         </div>
                         <div class="deployment-details">
                             <span>💰 ${formatKSH(d.amountPaid || 0)}</span>
                             <span>📅 ${new Date(d.createdAt).toLocaleDateString()}</span>
-                            ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View App</a>` : ''}
+                            ${d.appUrl ? `<a href="${d.appUrl}" target="_blank">🔗 View Bot</a>` : ''}
                             ${d.id ? `<a href="/logs/${d.id}" target="_blank">📋 Logs</a>` : ''}
                         </div>
                     </div>
@@ -346,7 +345,6 @@
             }
         }
 
-        // Get current user email
         let currentUser = null;
         async function init() {
             try {
