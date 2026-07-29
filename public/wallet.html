@@ -322,7 +322,7 @@
                 const data = await apiGet(`/api/deployments/${encodeURIComponent(currentUser?.email || '')}`);
                 const deployments = data.deployments || [];
                 if (!deployments.length) {
-                    container.innerHTML = `<div class="empty-state"><i class="fas fa-rocket"></i>No deployments yet</div>`;
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i>No deployments yet</div>`;
                     return;
                 }
                 container.innerHTML = deployments.map(d => `
