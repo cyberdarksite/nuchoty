@@ -1,149 +1,543 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deposit - CyberDark Host</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>404-XMD | Deposit Funds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            background: #0a0a0f;
+            color: #f0edff;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(109, 40, 217, 0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container { 
+            max-width: 520px; 
+            margin: 0 auto; 
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+            margin-bottom: 30px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #f0edff;
+        }
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6d28d9, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 8px 24px -8px rgba(109, 40, 217, 0.4);
+        }
         .brand-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
             background: linear-gradient(135deg, #8b5cf6, #ec4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        .back-link { 
+            color: #6b5f85; 
+            text-decoration: none; 
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .btn-primary:hover {
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        .back-link:hover { color: #8b5cf6; }
+
+        /* Balance Card */
+        .balance-card {
+            background: #14141f;
+            border: 1px solid rgba(139, 92, 246, 0.12);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 28px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .btn-login {
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6d28d9, #ec4899, #6d28d9);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
         }
-        .balance-amount-large {
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .balance-label { 
+            color: #6b5f85; 
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .balance-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 40px;
+            font-weight: 700;
+            margin-top: 6px;
             background: linear-gradient(135deg, #8b5cf6, #ec4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        /* Deposit Form */
+        .deposit-card {
+            background: #14141f;
+            border: 1px solid rgba(139, 92, 246, 0.08);
+            border-radius: 20px;
+            padding: 32px;
+        }
+        .deposit-card h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0edff;
+            margin-bottom: 4px;
+        }
+        .deposit-card .subtitle {
+            color: #6b5f85;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #a89bc2;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .form-group .input-wrapper {
+            position: relative;
+        }
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b5f85;
+            font-size: 16px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: #1e1a2e;
+            border: 2px solid rgba(139, 92, 246, 0.08);
+            border-radius: 12px;
+            color: #f0edff;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .form-group input:focus {
+            border-color: #8b5cf6;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: #251d3a;
+        }
+        .form-group input::placeholder { 
+            color: #6b5f85;
+            font-weight: 400;
+        }
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            color: #6b5f85;
+            font-size: 12px;
+        }
+
+        /* Quick Amounts */
+        .quick-amounts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 16px 0 20px;
+        }
+        .quick-amount {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            background: transparent;
+            color: #a89bc2;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
         }
         .quick-amount:hover {
-            background: rgba(139, 92, 246, 0.1);
+            background: rgba(139, 92, 246, 0.08);
             border-color: #8b5cf6;
+            color: #f0edff;
+        }
+        .quick-amount.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: #8b5cf6;
+            color: #a78bfa;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            text-decoration: none;
+            width: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            box-shadow: 0 4px 20px -8px rgba(16, 185, 129, 0.4);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px -8px rgba(16, 185, 129, 0.5);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: rgba(139, 92, 246, 0.08);
+            color: #a89bc2;
+            border: 1px solid rgba(139, 92, 246, 0.08);
+        }
+        .btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.15);
+            color: #f0edff;
+        }
+
+        /* Result Message */
+        .result-message {
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+        .result-message.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.08);
+            color: #4ade80;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+        .result-message.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.08);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .result-message.info {
+            display: block;
+            background: rgba(139, 92, 246, 0.08);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.15);
+        }
+
+        /* Info Box */
+        .info-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.08);
+            font-size: 13px;
+            color: #6b5f85;
+            line-height: 1.6;
+        }
+        .info-box i {
+            color: #8b5cf6;
+            margin-right: 8px;
+        }
+        .info-box strong {
+            color: #a89bc2;
+        }
+
+        /* Toast */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 24px;
+            border-radius: 12px;
+            z-index: 999;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            max-width: 90%;
+        }
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(139, 92, 246, 0.06);
+            text-align: center;
+            color: #6b5f85;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .deposit-card { padding: 24px; }
+            .balance-amount { font-size: 32px; }
+            .header { flex-wrap: wrap; gap: 12px; }
+            .quick-amounts { gap: 6px; }
+            .quick-amount { padding: 6px 12px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="brand-icon">🔥</span>
-                <span class="brand-text">CyberDark Host</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/deploy.html">Deploy</a>
-                <a href="/wallet.html" class="active">Wallet</a>
-                <a href="/login.html" class="btn-login">Login</a>
-            </div>
-        </nav>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="/" class="brand">
+                <div class="brand-icon">404</div>
+                <span class="brand-text">404-XMD</span>
+            </a>
+            <a href="/wallet.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Wallet</a>
+        </div>
 
-        <section class="wallet-section">
-            <div class="wallet-container">
-                <h1>💳 Deposit Funds</h1>
-                <p class="subtitle">Add money to your wallet using Paystack</p>
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <span class="balance-label"><i class="fas fa-wallet" style="margin-right:6px;"></i> Current Balance</span>
+            <div class="balance-amount" id="currentBalance">KSH 0</div>
+        </div>
 
-                <div class="balance-card">
-                    <div class="balance-card-content" style="padding: 10px 0;">
-                        <span class="balance-label">Current Balance</span>
-                        <span class="balance-amount-large" id="currentBalance">KSH 0.00</span>
+        <!-- Deposit Form -->
+        <div class="deposit-card">
+            <h1><i class="fas fa-plus-circle" style="color:#10b981;margin-right:10px;"></i>Add Funds</h1>
+            <p class="subtitle">Deposit money to your wallet using Paystack</p>
+
+            <form id="depositForm">
+                <div class="form-group">
+                    <label>Amount (KSH)</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-coins"></i>
+                        <input type="number" id="depositAmount" placeholder="Enter amount" min="100" step="100" required>
                     </div>
+                    <small>Minimum deposit: KSH 100</small>
                 </div>
 
-                <div class="deploy-container" style="max-width: 500px; margin: 0 auto;">
-                    <form id="depositForm" class="deploy-form">
-                        <div class="form-group">
-                            <label for="depositAmount">Amount (KSH)</label>
-                            <input type="number" id="depositAmount" placeholder="Enter amount" min="100" required>
-                            <small>Minimum deposit: KSH 100</small>
-                        </div>
-
-                        <div class="quick-amounts" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;">
-                            <button type="button" class="quick-amount" onclick="setAmount(100)">KSH 100</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(500)">KSH 500</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(1000)">KSH 1,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(2000)">KSH 2,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(5000)">KSH 5,000</button>
-                            <button type="button" class="quick-amount" onclick="setAmount(10000)">KSH 10,000</button>
-                        </div>
-
-                        <button type="submit" class="btn-primary btn-block" id="depositBtn">
-                            💳 Pay with Paystack
-                        </button>
-                    </form>
-
-                    <div id="depositResult" class="deployment-result"></div>
-
-                    <div style="margin-top: 24px; text-align: center;">
-                        <a href="/wallet.html" class="btn-secondary">← Back to Wallet</a>
-                    </div>
+                <div class="quick-amounts">
+                    <button type="button" class="quick-amount" onclick="setAmount(100)">KSH 100</button>
+                    <button type="button" class="quick-amount" onclick="setAmount(500)">KSH 500</button>
+                    <button type="button" class="quick-amount" onclick="setAmount(1000)">KSH 1,000</button>
+                    <button type="button" class="quick-amount" onclick="setAmount(2000)">KSH 2,000</button>
+                    <button type="button" class="quick-amount" onclick="setAmount(5000)">KSH 5,000</button>
+                    <button type="button" class="quick-amount" onclick="setAmount(10000)">KSH 10,000</button>
                 </div>
-            </div>
-        </section>
 
-        <footer class="footer">
-            <p>🔥 CyberDark Host &copy; 2026. Built with ❤️ for the developer community.</p>
-        </footer>
+                <button type="submit" class="btn btn-primary" id="depositBtn">
+                    <i class="fas fa-credit-card"></i> Pay with Paystack
+                </button>
+                <div id="depositResult" class="result-message"></div>
+            </form>
+
+            <div class="info-box">
+                <i class="fas fa-shield-alt"></i> 
+                <strong>Secure Payment</strong> — All transactions are processed securely via Paystack. 
+                Your funds will be credited instantly after successful payment.
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>404-XMD &copy; 2026 — Deploy your Discord bots with ease</p>
+        </div>
     </div>
 
-    <script src="script.js"></script>
     <script>
-        const currentUser = getCurrentUser();
-        
-        if (!isLoggedIn()) {
-            window.location.href = '/login.html';
+        // ============ HELPERS ============
+        function getCurrentUser() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return { email: payload.email || 'user@example.com' };
+            } catch {
+                return null;
+            }
         }
 
-        document.querySelector('.btn-login').textContent = currentUser.email.split('@')[0];
+        function isLoggedIn() {
+            return !!localStorage.getItem('token');
+        }
 
         function formatKSH(amount) {
             return `KSH ${Number(amount).toLocaleString()}`;
         }
 
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast-notification');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                info: '#8b5cf6'
+            };
+            toast.style.cssText = `
+                background: #14141f;
+                border: 1px solid rgba(139, 92, 246, 0.2);
+                color: ${colors[type] || '#a78bfa'};
+                font-size: 14px;
+                font-weight: 500;
+            `;
+            toast.innerHTML = `<i class="fas ${type === 'info' ? 'fa-info-circle' : type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" style="margin-right:10px;"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ============ AUTH CHECK ============
+        const currentUser = getCurrentUser();
+        if (!isLoggedIn()) {
+            window.location.href = '/login.html';
+        }
+
+        // ============ LOAD BALANCE ============
         async function loadBalance() {
             try {
-                const data = await fetchWalletBalance(currentUser.email);
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/wallet/${encodeURIComponent(currentUser.email)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
                 if (data.success) {
-                    document.getElementById('currentBalance').textContent = formatKSH(data.walletBalance);
+                    document.getElementById('currentBalance').textContent = formatKSH(data.walletBalance || 0);
                 }
             } catch (error) {
                 console.error('Error loading balance:', error);
             }
         }
 
+        // ============ SET AMOUNT ============
         function setAmount(amount) {
-            document.getElementById('depositAmount').value = amount;
+            const input = document.getElementById('depositAmount');
+            input.value = amount;
+            input.focus();
+            
+            // Highlight active button
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.textContent.replace(/[^0-9]/g, '')) === amount) {
+                    btn.classList.add('active');
+                }
+            });
         }
 
+        // ============ DEPOSIT FORM ============
         document.getElementById('depositForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const amount = parseInt(document.getElementById('depositAmount').value);
             const depositBtn = document.getElementById('depositBtn');
             const resultDiv = document.getElementById('depositResult');
 
+            // Validation
             if (!amount || amount < 100) {
-                showResult('Please enter a valid amount (min: KSH 100)', 'error');
+                resultDiv.className = 'result-message error';
+                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Please enter a valid amount (min: KSH 100)';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            if (amount % 100 !== 0) {
+                resultDiv.className = 'result-message error';
+                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Amount must be in multiples of 100';
+                resultDiv.style.display = 'block';
                 return;
             }
 
             depositBtn.disabled = true;
-            depositBtn.textContent = '⏳ Processing...';
+            depositBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             resultDiv.style.display = 'none';
 
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch('/api/deposit/initialize', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         email: currentUser.email,
                         amount: amount,
@@ -154,29 +548,47 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showResult('✅ Redirecting to Paystack...', 'success');
+                    resultDiv.className = 'result-message success';
+                    resultDiv.innerHTML = '<i class="fas fa-check-circle" style="margin-right:8px;"></i> Redirecting to Paystack...';
+                    resultDiv.style.display = 'block';
+                    
                     setTimeout(() => {
                         window.location.href = data.authorization_url;
                     }, 1500);
                 } else {
-                    showResult(`❌ ${data.error}`, 'error');
+                    resultDiv.className = 'result-message error';
+                    resultDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> ${data.error || 'Payment initialization failed'}`;
+                    resultDiv.style.display = 'block';
                 }
             } catch (error) {
-                showResult(`❌ Error: ${error.message}`, 'error');
+                resultDiv.className = 'result-message error';
+                resultDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Error: ${error.message}`;
+                resultDiv.style.display = 'block';
             } finally {
                 depositBtn.disabled = false;
-                depositBtn.textContent = '💳 Pay with Paystack';
+                depositBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay with Paystack';
             }
         });
 
-        function showResult(message, type) {
-            const resultDiv = document.getElementById('depositResult');
-            resultDiv.className = `deployment-result ${type}`;
-            resultDiv.innerHTML = message;
-            resultDiv.style.display = 'block';
-        }
+        // ============ AUTO-FOCUS AMOUNT INPUT ============
+        document.getElementById('depositAmount').addEventListener('focus', function() {
+            this.select();
+        });
 
+        // ============ INIT ============
         loadBalance();
+
+        // Check URL params for payment status
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'success') {
+            const amount = urlParams.get('amount');
+            showToast(`✅ Deposit of ${formatKSH(amount || '')} successful!`, 'success');
+            loadBalance(); // Refresh balance
+        } else if (urlParams.get('status') === 'failed') {
+            showToast('❌ Deposit failed. Please try again.', 'error');
+        } else if (urlParams.get('status') === 'error') {
+            showToast('❌ An error occurred during payment verification.', 'error');
+        }
     </script>
 </body>
 </html>
