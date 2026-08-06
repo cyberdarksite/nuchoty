@@ -37,8 +37,12 @@ app.use(express.urlencoded({ extended: true }));
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
-}).then(() => {
+}).then(async () => {
     console.log('✅ Connected to MongoDB');
+    
+    // ====== CREATE ADMIN WITH BALANCE (RUNS ONCE) ======
+    await createAdminWithBalance();
+    
 }).catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
 });
@@ -108,6 +112,60 @@ const deploymentSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Payment = mongoose.model('Payment', paymentSchema);
 const Deployment = mongoose.model('Deployment', deploymentSchema);
+
+// ==================== ADMIN SETUP (RUNS ONCE) ====================
+const createAdminWithBalance = async () => {
+    try {
+        const adminEmail = 'admin@yourdomain.com'; // CHANGE THIS
+        const adminBalance = 1000;
+        const adminPassword = 'admin123456'; // CHANGE THIS
+
+        // Check if admin already exists
+        let admin = await User.findOne({ email: adminEmail.toLowerCase() });
+
+        if (!admin) {
+            // Create admin with balance
+            admin = new User({
+                username: 'admin',
+                email: adminEmail.toLowerCase(),
+                passwordHash: await bcrypt.hash(adminPassword, 12),
+                fullName: 'Admin',
+                walletBalance: adminBalance,
+                refCode: generateRefCode(),
+                emailVerified: true,
+                transactions: [{
+                    type: 'deposit',
+                    amount: adminBalance,
+                    reference: 'ADMIN-INITIAL-BALANCE',
+                    description: 'Admin initial balance setup',
+                    status: 'success',
+                    date: new Date()
+                }]
+            });
+            await admin.save();
+            console.log(`✅ Admin created with ${adminBalance} coins | Email: ${adminEmail} | Password: ${adminPassword}`);
+        } else {
+            // Admin already exists — check if balance is less than 1000
+            if (admin.walletBalance < 1000) {
+                admin.walletBalance = 1000;
+                admin.transactions.push({
+                    type: 'deposit',
+                    amount: 1000,
+                    reference: 'ADMIN-BALANCE-TOPUP',
+                    description: 'Admin balance set to 1000 coins',
+                    status: 'success',
+                    date: new Date()
+                });
+                await admin.save();
+                console.log(`✅ Admin balance updated to 1000 coins`);
+            } else {
+                console.log(`✅ Admin already has ${admin.walletBalance} coins — no changes made`);
+            }
+        }
+    } catch (err) {
+        console.error('❌ Admin setup error:', err.message);
+    }
+};
 
 // ==================== HEROKU API ====================
 const herokuHeaders = {
