@@ -39,10 +39,7 @@ mongoose.connect(MONGODB_URI, {
     useUnifiedTopology: true
 }).then(async () => {
     console.log('✅ Connected to MongoDB');
-    
-    // ====== CREATE ADMIN WITH BALANCE (RUNS ONCE) ======
-    await createAdminWithBalance();
-    
+    await createAdminIfNotExists();
 }).catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
 });
@@ -113,25 +110,27 @@ const User = mongoose.model('User', userSchema);
 const Payment = mongoose.model('Payment', paymentSchema);
 const Deployment = mongoose.model('Deployment', deploymentSchema);
 
-// ==================== ADMIN SETUP (RUNS ONCE) ====================
-const createAdminWithBalance = async () => {
+// ==================== CREATE ADMIN FUNCTION ====================
+const createAdminIfNotExists = async () => {
     try {
-        const adminEmail = 'admin@yourdomain.com'; // CHANGE THIS
+        const adminEmail = 'admin@cyberdark.site';
+        const adminPassword = 'admin123456';
         const adminBalance = 1000;
-        const adminPassword = 'admin123456'; // CHANGE THIS
 
-        // Check if admin already exists
-        let admin = await User.findOne({ email: adminEmail.toLowerCase() });
+        // Check if admin exists
+        let admin = await User.findOne({ email: adminEmail });
 
         if (!admin) {
-            // Create admin with balance
+            // Create new admin
+            const hashedPassword = await bcrypt.hash(adminPassword, 12);
+            
             admin = new User({
                 username: 'admin',
-                email: adminEmail.toLowerCase(),
-                passwordHash: await bcrypt.hash(adminPassword, 12),
+                email: adminEmail,
+                passwordHash: hashedPassword,
                 fullName: 'Admin',
                 walletBalance: adminBalance,
-                refCode: generateRefCode(),
+                refCode: 'ADMIN001',
                 emailVerified: true,
                 transactions: [{
                     type: 'deposit',
@@ -142,28 +141,32 @@ const createAdminWithBalance = async () => {
                     date: new Date()
                 }]
             });
+            
             await admin.save();
-            console.log(`✅ Admin created with ${adminBalance} coins | Email: ${adminEmail} | Password: ${adminPassword}`);
+            console.log(`✅ Admin created successfully!`);
+            console.log(`📧 Email: ${adminEmail}`);
+            console.log(`🔑 Password: ${adminPassword}`);
+            console.log(`💰 Balance: ${adminBalance}`);
         } else {
-            // Admin already exists — check if balance is less than 1000
+            // Update existing admin balance if needed
             if (admin.walletBalance < 1000) {
                 admin.walletBalance = 1000;
                 admin.transactions.push({
                     type: 'deposit',
                     amount: 1000,
                     reference: 'ADMIN-BALANCE-TOPUP',
-                    description: 'Admin balance set to 1000 coins',
+                    description: 'Admin balance topped up to 1000',
                     status: 'success',
                     date: new Date()
                 });
                 await admin.save();
-                console.log(`✅ Admin balance updated to 1000 coins`);
+                console.log(`✅ Admin balance updated to 1000`);
             } else {
-                console.log(`✅ Admin already has ${admin.walletBalance} coins — no changes made`);
+                console.log(`✅ Admin exists with balance: ${admin.walletBalance}`);
             }
         }
-    } catch (err) {
-        console.error('❌ Admin setup error:', err.message);
+    } catch (error) {
+        console.error('❌ Admin creation error:', error.message);
     }
 };
 
