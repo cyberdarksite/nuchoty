@@ -27,6 +27,7 @@ const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY || '';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 const DEPLOYMENT_COST = parseInt(process.env.DEPLOYMENT_COST) || 50;
 const JWT_SECRET = process.env.JWT_SECRET || 'cyberdark-secret-key-2024';
+const DEFAULT_REPO_URL = process.env.DEFAULT_REPO_URL || 'https://github.com/KAMRAN-SMD/KAMRAN-MD/tarball/main';
 
 // ==================== MIDDLEWARE ====================
 app.use(express.static('public'));
@@ -117,11 +118,9 @@ const createAdminIfNotExists = async () => {
         const adminPassword = 'admin123456';
         const adminBalance = 1000;
 
-        // Check if admin exists
         let admin = await User.findOne({ email: adminEmail });
 
         if (!admin) {
-            // Create new admin
             const hashedPassword = await bcrypt.hash(adminPassword, 12);
             
             admin = new User({
@@ -148,7 +147,6 @@ const createAdminIfNotExists = async () => {
             console.log(`🔑 Password: ${adminPassword}`);
             console.log(`💰 Balance: ${adminBalance}`);
         } else {
-            // Update existing admin balance if needed
             if (admin.walletBalance < 1000) {
                 admin.walletBalance = 1000;
                 admin.transactions.push({
@@ -244,7 +242,6 @@ app.post('/api/register', async (req, res) => {
 
         const normalizedEmail = email.toLowerCase();
         
-        // Check if user exists
         const existingUser = await User.findOne({ 
             $or: [{ email: normalizedEmail }, { username: username }] 
         });
@@ -253,13 +250,11 @@ app.post('/api/register', async (req, res) => {
             return res.status(409).json({ error: 'Email or username already used' });
         }
 
-        // Create user
         const passwordHash = await bcrypt.hash(password, 12);
         const refCode = generateRefCode();
         let initialCoins = 0;
         let referrer = null;
 
-        // Handle referral
         if (ref) {
             referrer = await User.findOne({ refCode: ref.toUpperCase() });
             if (referrer) {
@@ -280,7 +275,6 @@ app.post('/api/register', async (req, res) => {
 
         await user.save();
 
-        // Reward referrer
         if (referrer) {
             referrer.walletBalance += 2;
             referrer.transactions.push({
@@ -317,6 +311,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('🔐 Login attempt:', email);
         
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password required' });
@@ -324,6 +319,7 @@ app.post('/api/login', async (req, res) => {
 
         const normalizedEmail = email.toLowerCase();
         const user = await User.findOne({ email: normalizedEmail });
+        console.log('👤 User found:', user ? user.email : 'NOT FOUND');
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -334,6 +330,8 @@ app.post('/api/login', async (req, res) => {
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        console.log('🔐 Password valid:', isPasswordValid);
+
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -393,17 +391,25 @@ app.get('/api/profile', async (req, res) => {
     }
 });
 
-// ==================== DEPLOYMENT LOG HELPER ====================
+// ==================== DEPLOYMENT FUNCTION ====================
 
 async function processDeployment(payment) {
     const metadata = payment.metadata;
     const { appName, repoUrl, sessionId, teamName, userId, email } = metadata;
 
+    // Use default repo if none provided
+    const finalRepoUrl = repoUrl || DEFAULT_REPO_URL;
+    
+    // Generate app name if not provided
+    const finalAppName = appName?.trim()
+        ? appName.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+        : `bot-${uuidv4().slice(0, 6)}`;
+
     const deployment = new Deployment({
         userId,
         email: email.toLowerCase(),
-        appName: appName || `app-${uuidv4().slice(0, 8)}`,
-        repoUrl,
+        appName: finalAppName,
+        repoUrl: finalRepoUrl,
         sessionId,
         teamName: teamName || HEROKU_TEAM,
         paymentReference: payment.reference,
@@ -414,49 +420,28 @@ async function processDeployment(payment) {
     await deployment.save();
 
     try {
-        await addDeploymentLog(deployment._id, `📝 Deployment created for ${deployment.appName}`, 'info');
-        await addDeploymentLog(deployment._id, `💰 Payment confirmed: KSH ${DEPLOYMENT_COST}`, 'success');
+        await addDeploymentLog(deployment._id, `📝 Creating Heroku app: ${finalAppName}`, 'info');
 
-        const user = await User.findOne({ email: email.toLowerCase() });
-        if (!user) throw new Error('User not found');
-
-        if (user.walletBalance < DEPLOYMENT_COST) {
-            throw new Error(`Insufficient balance. Required: KSH ${DEPLOYMENT_COST}, Available: KSH ${user.walletBalance}`);
-        }
-
-        await addDeploymentLog(deployment._id, `✅ Balance check passed. Available: KSH ${user.walletBalance}`, 'success');
-
-        user.walletBalance -= DEPLOYMENT_COST;
-        user.totalSpent += DEPLOYMENT_COST;
-        user.transactions.push({
-            type: 'deployment',
-            amount: DEPLOYMENT_COST,
-            reference: payment.reference,
-            description: `Deployment of ${deployment.appName}`,
-            status: 'success'
-        });
-        await user.save();
-
-        await addDeploymentLog(deployment._id, `💰 KSH ${DEPLOYMENT_COST} deducted from wallet`, 'success');
-        await addDeploymentLog(deployment._id, `📊 Remaining balance: KSH ${user.walletBalance}`, 'info');
-
-        // Create Heroku app
-        await addDeploymentLog(deployment._id, `🌐 Creating Heroku app: ${deployment.appName}...`, 'info');
+        // Step 1: Create Heroku app
         const createAppRes = await axios.post(
-            'https://api.heroku.com/organizations/apps',
-            { name: deployment.appName, organization: deployment.teamName },
+            'https://api.heroku.com/apps',
+            { 
+                name: finalAppName,
+                region: 'us',
+                stack: 'heroku-22'
+            },
             { headers: herokuHeaders }
         );
-        await addDeploymentLog(deployment._id, `✅ Heroku app created: ${deployment.appName}`, 'success');
-        await addDeploymentLog(deployment._id, `🔗 App URL: ${createAppRes.data.web_url}`, 'info');
+        
+        await addDeploymentLog(deployment._id, `✅ Heroku app created: ${finalAppName}`, 'success');
 
-        // Set config vars
-        await addDeploymentLog(deployment._id, `⚙️ Setting configuration variables...`, 'info');
+        // Step 2: Set config vars (SESSION_ID and any others)
+        await addDeploymentLog(deployment._id, `⚙️ Setting SESSION_ID...`, 'info');
         await axios.patch(
-            `https://api.heroku.com/apps/${deployment.appName}/config-vars`,
-            {
+            `https://api.heroku.com/apps/${finalAppName}/config-vars`,
+            { 
                 SESSION_ID: sessionId,
-                TEAM_NAME: deployment.teamName,
+                TEAM_NAME: teamName || HEROKU_TEAM,
                 DEPLOYED_BY: email,
                 DEPLOYMENT_DATE: new Date().toISOString()
             },
@@ -464,34 +449,66 @@ async function processDeployment(payment) {
         );
         await addDeploymentLog(deployment._id, `✅ Configuration variables set`, 'success');
 
-        // Trigger build
-        await addDeploymentLog(deployment._id, `📦 Building from repository: ${repoUrl}`, 'info');
+        // Step 3: Trigger build from GitHub tarball
+        await addDeploymentLog(deployment._id, `📦 Building from: ${finalRepoUrl}`, 'info');
+        
+        // Convert GitHub URL to tarball if needed
+        let tarballUrl = finalRepoUrl;
+        if (finalRepoUrl.includes('github.com') && !finalRepoUrl.includes('tarball')) {
+            const match = finalRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+            if (match) {
+                tarballUrl = `https://github.com/${match[1]}/${match[2]}/tarball/main`;
+                await addDeploymentLog(deployment._id, `📦 Using tarball: ${tarballUrl}`, 'info');
+            }
+        }
+
         const buildRes = await axios.post(
-            `https://api.heroku.com/apps/${deployment.appName}/builds`,
-            { source_blob: { url: repoUrl } },
+            `https://api.heroku.com/apps/${finalAppName}/builds`,
+            { source_blob: { url: tarballUrl } },
             { headers: herokuHeaders }
         );
 
         deployment.buildId = buildRes.data.id;
-        deployment.appUrl = createAppRes.data.web_url || `https://${deployment.appName}.herokuapp.com`;
+        deployment.appUrl = createAppRes.data.web_url || `https://${finalAppName}.herokuapp.com`;
         deployment.deploymentStatus = 'building';
         deployment.deployedAt = new Date();
 
         await addDeploymentLog(deployment._id, `✅ Build triggered: ${buildRes.data.id}`, 'success');
         await addDeploymentLog(deployment._id, `📊 Build status: ${buildRes.data.status}`, 'info');
         await addDeploymentLog(deployment._id, `⏳ Deployment in progress... This may take 3-5 minutes`, 'info');
+        await addDeploymentLog(deployment._id, `🔗 App URL: https://${finalAppName}.herokuapp.com`, 'info');
+        await addDeploymentLog(deployment._id, `📊 Dashboard: https://dashboard.heroku.com/apps/${finalAppName}`, 'info');
+
+        // Deduct payment from user
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (user) {
+            user.walletBalance -= DEPLOYMENT_COST;
+            user.totalSpent += DEPLOYMENT_COST;
+            user.transactions.push({
+                type: 'deployment',
+                amount: DEPLOYMENT_COST,
+                reference: payment.reference,
+                description: `Deployment of ${finalAppName}`,
+                status: 'success'
+            });
+            await user.save();
+            await addDeploymentLog(deployment._id, `💰 KSH ${DEPLOYMENT_COST} deducted from wallet`, 'success');
+            await addDeploymentLog(deployment._id, `📊 Remaining balance: KSH ${user.walletBalance}`, 'info');
+        }
 
         await deployment.save();
-
         await User.findByIdAndUpdate(userId, { $push: { deployments: deployment._id } });
 
         return deployment;
 
     } catch (error) {
-        console.error('Deployment error:', error.message);
+        console.error('Deployment error:', error.response?.data || error.message);
         deployment.deploymentStatus = 'failed';
-        deployment.errorMessage = error.message;
+        deployment.errorMessage = error.response?.data?.message || error.message;
         await addDeploymentLog(deployment._id, `❌ Deployment failed: ${error.message}`, 'error');
+        if (error.response?.data) {
+            await addDeploymentLog(deployment._id, `📋 Error: ${JSON.stringify(error.response.data)}`, 'error');
+        }
         await deployment.save();
         throw error;
     }
@@ -664,10 +681,10 @@ app.post('/api/deploy', async (req, res) => {
     try {
         const { email, appName, repoUrl, sessionId, teamName } = req.body;
         
-        if (!email || !appName || !repoUrl || !sessionId) {
+        if (!email || !sessionId) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Email, appName, repoUrl, and sessionId are required' 
+                error: 'Email and sessionId are required' 
             });
         }
 
@@ -683,6 +700,14 @@ app.post('/api/deploy', async (req, res) => {
             });
         }
 
+        // Use provided repo or default
+        const finalRepoUrl = repoUrl || DEFAULT_REPO_URL;
+        
+        // Generate app name if not provided
+        const finalAppName = appName?.trim()
+            ? appName.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+            : `bot-${uuidv4().slice(0, 6)}`;
+
         const reference = `DEPLOY-${Date.now()}-${uuidv4().slice(0, 8)}`;
         const payment = new Payment({
             userId: user._id.toString(),
@@ -692,8 +717,8 @@ app.post('/api/deploy', async (req, res) => {
             type: 'deployment',
             status: 'success',
             metadata: { 
-                appName, 
-                repoUrl, 
+                appName: finalAppName,
+                repoUrl: finalRepoUrl, 
                 sessionId, 
                 teamName, 
                 userId: user._id.toString(), 
@@ -921,6 +946,7 @@ app.listen(PORT, () => {
     console.log(`🔥 CyberDark Host running on port ${PORT}`);
     console.log(`📁 Default team: ${HEROKU_TEAM}`);
     console.log(`💰 Deployment cost: KSH ${DEPLOYMENT_COST}`);
+    console.log(`📦 Default repo: ${DEFAULT_REPO_URL}`);
     console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected'}`);
     console.log(`🌐 App URL: ${APP_URL}`);
 });
